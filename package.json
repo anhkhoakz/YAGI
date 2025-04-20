@@ -67,9 +67,5 @@
   "private": false,
   "bugs": {
     "url": "https://github.com/anhkhoakz/YAGI/issues"
-  },
-  "files": [
-    "dist/",
-    "src/"
-  ]
+  }
 }
