@@ -1,16 +1,18 @@
 {
   "name": "yagi",
   "displayName": "YAGI",
-  "description": "Yet! Another Git Ignore",
-  "version": "0.0.1",
+  "description": "Yet! Another GitIgnore",
+  "version": "0.0.2",
   "engines": {
-    "vscode": "^1.99.0"
+    "vscode": "^1.99.0",
+    "vscodium": "^1.99.0",
+    "node": "^23.6.0",
+    "pnpm": "^10.7.0"
   },
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "onCommand:yagi.helloWorld",
     "onCommand:yagi.generateGitignore"
   ],
   "main": "./dist/extension.js",
@@ -52,5 +54,22 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/anhkhoakz/YAGI.git"
-  }
+  },
+  "license": "GPL-3.0-only",
+  "icon": "assets/icon.png",
+  "publisher": "anhkhoakz",
+  "homepage": "https://github.com/anhkhoakz/YAGI#readme",
+  "author": {
+    "name": "anhkhoakz",
+    "url": "https://www.anhkhoakz.dev/"
+  },
+  "engineStrict": false,
+  "private": false,
+  "bugs": {
+    "url": "https://github.com/anhkhoakz/YAGI/issues"
+  },
+  "files": [
+    "dist/",
+    "src/"
+  ]
 }
