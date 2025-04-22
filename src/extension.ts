@@ -1,6 +1,12 @@
 import * as vscode from "vscode";
 
 export function activate(context: vscode.ExtensionContext): void {
+	const templateListKey = "yagi.gitignoreTemplateList";
+	const templateListTimestampKey = "yagi.gitignoreTemplateListTimestamp";
+	const templateListTtl = 24 * 60 * 60 * 1000; // 24 hours
+	const gitignoreCacheKey = "yagi.gitignoreCache";
+	const gitignoreCacheTtl = 60 * 60 * 1000; // 1 hour
+
 	const disposable: vscode.Disposable = vscode.commands.registerCommand(
 		"yagi.helloWorld",
 		(): void => {
@@ -14,14 +20,31 @@ export function activate(context: vscode.ExtensionContext): void {
 		"yagi.generateGitignore",
 		async (): Promise<void> => {
 			try {
-				const listResp: Response = await fetch(
-					"https://www.toptal.com/developers/gitignore/api/list",
+				// --- Template List Caching ---
+				let templates: string[] | undefined = undefined;
+				const now = Date.now();
+				const cachedList = context.globalState.get<string[]>(templateListKey);
+				const cachedListTimestamp = context.globalState.get<number>(
+					templateListTimestampKey,
 				);
-				const listText: string = await listResp.text();
-				const templates: string[] = listText
-					.split(/,|\n/)
-					.map((t: string) => t.trim())
-					.filter(Boolean);
+				if (
+					cachedList &&
+					cachedListTimestamp &&
+					now - cachedListTimestamp < templateListTtl
+				) {
+					templates = cachedList;
+				} else {
+					const listResp: Response = await fetch(
+						"https://www.toptal.com/developers/gitignore/api/list",
+					);
+					const listText: string = await listResp.text();
+					templates = listText
+						.split(/,|\n/)
+						.map((t: string) => t.trim())
+						.filter(Boolean);
+					await context.globalState.update(templateListKey, templates);
+					await context.globalState.update(templateListTimestampKey, now);
+				}
 
 				const picks: string[] | undefined = await vscode.window.showQuickPick(
 					templates,
@@ -36,9 +59,24 @@ export function activate(context: vscode.ExtensionContext): void {
 					return;
 				}
 
-				const apiUrl: string = `https://www.toptal.com/developers/gitignore/api/${picks.join(",")}`;
-				const resp: Response = await fetch(apiUrl);
-				const content: string = await resp.text();
+				const apiKey = picks.sort().join(",");
+				const cacheObj =
+					context.globalState.get<
+						Record<string, { content: string; timestamp: number }>
+					>(gitignoreCacheKey) || {};
+				let content: string | undefined = undefined;
+				if (
+					cacheObj[apiKey] &&
+					now - cacheObj[apiKey].timestamp < gitignoreCacheTtl
+				) {
+					content = cacheObj[apiKey].content;
+				} else {
+					const apiUrl: string = `https://www.toptal.com/developers/gitignore/api/${picks.join(",")}`;
+					const resp: Response = await fetch(apiUrl);
+					content = await resp.text();
+					cacheObj[apiKey] = { content, timestamp: now };
+					await context.globalState.update(gitignoreCacheKey, cacheObj);
+				}
 
 				const folders: readonly vscode.WorkspaceFolder[] | undefined =
 					vscode.workspace.workspaceFolders;
@@ -75,6 +113,8 @@ export function activate(context: vscode.ExtensionContext): void {
 							gitignoreUri,
 							Buffer.from(newContent, "utf8"),
 						);
+						// Save cache after writing
+						await context.globalState.update(gitignoreCacheKey, cacheObj);
 						vscode.window.showInformationMessage("Appended to .gitignore!");
 						return;
 					}
@@ -83,6 +123,8 @@ export function activate(context: vscode.ExtensionContext): void {
 					gitignoreUri,
 					Buffer.from(content, "utf8"),
 				);
+				// Save cache after writing
+				await context.globalState.update(gitignoreCacheKey, cacheObj);
 				vscode.window.showInformationMessage(".gitignore generated!");
 			} catch (err: any) {
 				vscode.window.showErrorMessage(
@@ -93,6 +135,18 @@ export function activate(context: vscode.ExtensionContext): void {
 	);
 
 	context.subscriptions.push(giDisposable);
+
+	const clearCacheDisposable: vscode.Disposable =
+		vscode.commands.registerCommand(
+			"yagi.clearCache",
+			async (): Promise<void> => {
+				await context.globalState.update(templateListKey, undefined);
+				await context.globalState.update(templateListTimestampKey, undefined);
+				await context.globalState.update(gitignoreCacheKey, undefined);
+				vscode.window.showInformationMessage("YAGI cache cleared.");
+			},
+		);
+	context.subscriptions.push(clearCacheDisposable);
 }
 
 export function deactivate(): void {}
