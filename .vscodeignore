@@ -12,3 +12,7 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+biome.json
+changelog.md
+pnpm-lock.yaml
+pnpm-workspace.yaml
