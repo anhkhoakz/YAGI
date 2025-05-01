@@ -1,8 +1,8 @@
 {
   "name": "yagi",
   "displayName": "YAGI",
-  "description": "Yet! Another GitIgnore",
-  "version": "0.0.3",
+  "description": "Yet! Another .gitignore",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.99.0",
     "vscodium": "^1.99.0",
