@@ -25,9 +25,15 @@ describe("Extension Test Suite", () => {
 		globalAny.fetch = fetchStub;
 
 		const qpStub = sinon.stub(vscode.window, "showQuickPick");
-		qpStub.onFirstCall().resolves(picks);
+		// Wrap picks as QuickPickItem objects if they are strings
+		// showQuickPick should resolve to a single QuickPickItem or undefined
+		if (picks.length > 0) {
+			qpStub.onFirstCall().resolves({ label: picks[0] });
+		} else {
+			qpStub.onFirstCall().resolves(undefined);
+		}
 		if (overwriteAction) {
-			qpStub.onSecondCall().resolves(overwriteAction);
+			qpStub.onSecondCall().resolves({ label: overwriteAction });
 		}
 
 		let folders = vscode.workspace.workspaceFolders;
@@ -45,12 +51,17 @@ describe("Extension Test Suite", () => {
 	afterEach(() => {
 		sinon.restore();
 		const globalAny = global as any;
-		if (globalAny.fetch) delete globalAny.fetch;
+		if (globalAny.fetch) {
+			delete globalAny.fetch;
+		}
 	});
 
 	it("should generate a .gitignore file when yagi.generateGitignore is executed", async () => {
 		const { gitignorePath } = await setupGitignoreTest();
 		await vscode.commands.executeCommand("yagi.generateGitignore");
+		if (!gitignorePath) {
+			throw new Error("No gitignorePath");
+		}
 		assert.ok(fs.existsSync(gitignorePath), ".gitignore was not created");
 		const content = fs.readFileSync(gitignorePath, "utf8");
 		assert.ok(
@@ -64,6 +75,9 @@ describe("Extension Test Suite", () => {
 		const { gitignorePath } = await setupGitignoreTest({
 			overwriteAction: "Append",
 		});
+		if (!gitignorePath) {
+			throw new Error("No gitignorePath");
+		}
 		fs.writeFileSync(gitignorePath, "# Existing\nfoo\n");
 		await vscode.commands.executeCommand("yagi.generateGitignore");
 		const content = fs.readFileSync(gitignorePath, "utf8");
@@ -76,6 +90,9 @@ describe("Extension Test Suite", () => {
 		const { gitignorePath } = await setupGitignoreTest({
 			overwriteAction: "Cancel",
 		});
+		if (!gitignorePath) {
+			throw new Error("No gitignorePath");
+		}
 		fs.writeFileSync(gitignorePath, "# Existing\nfoo\n");
 		await vscode.commands.executeCommand("yagi.generateGitignore");
 		const content = fs.readFileSync(gitignorePath, "utf8");
@@ -105,8 +122,8 @@ describe("Extension Test Suite", () => {
 			.resolves({ text: async () => "# Node\nnode_modules/\n" });
 		globalAny.fetch = fetchStub;
 		const qpStub = sinon.stub(vscode.window, "showQuickPick");
-		qpStub.onFirstCall().resolves(["node"]);
-		qpStub.onSecondCall().resolves("Override");
+		qpStub.onFirstCall().resolves({ label: "node" });
+		qpStub.onSecondCall().resolves({ label: "Override" });
 		await vscode.commands.executeCommand("yagi.generateGitignore");
 		foldersStub.restore();
 		qpStub.restore();

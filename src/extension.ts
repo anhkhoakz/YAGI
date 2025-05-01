@@ -45,8 +45,8 @@ export function activate(context: vscode.ExtensionContext): void {
 					await context.globalState.update(templateListTimestampKey, now);
 				}
 
-				const picks: string[] | undefined = await vscode.window.showQuickPick(
-					templates,
+				const picks = await vscode.window.showQuickPick(
+					templates.map((t) => ({ label: t })),
 					{
 						canPickMany: true,
 						placeHolder:
@@ -57,8 +57,9 @@ export function activate(context: vscode.ExtensionContext): void {
 					vscode.window.showInformationMessage("No templates selected.");
 					return;
 				}
+				const selectedTemplates = picks.map((p) => p.label);
 
-				const apiKey = picks.sort().join(",");
+				const apiKey = selectedTemplates.sort().join(",");
 				const cacheObj =
 					context.globalState.get<
 						Record<string, { content: string; timestamp: number }>
@@ -70,7 +71,7 @@ export function activate(context: vscode.ExtensionContext): void {
 				) {
 					content = cacheObj[apiKey].content;
 				} else {
-					const apiUrl: string = `https://www.toptal.com/developers/gitignore/api/${picks.join(",")}`;
+					const apiUrl: string = `https://www.toptal.com/developers/gitignore/api/${selectedTemplates.join(",")}`;
 					const resp: Response = await fetch(apiUrl);
 					content = await resp.text();
 					cacheObj[apiKey] = { content, timestamp: now };
