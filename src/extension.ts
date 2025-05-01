@@ -20,7 +20,6 @@ export function activate(context: vscode.ExtensionContext): void {
 		"yagi.generateGitignore",
 		async (): Promise<void> => {
 			try {
-				// --- Template List Caching ---
 				let templates: string[] | undefined = undefined;
 				const now = Date.now();
 				const cachedList = context.globalState.get<string[]>(templateListKey);
@@ -113,7 +112,6 @@ export function activate(context: vscode.ExtensionContext): void {
 							gitignoreUri,
 							Buffer.from(newContent, "utf8"),
 						);
-						// Save cache after writing
 						await context.globalState.update(gitignoreCacheKey, cacheObj);
 						vscode.window.showInformationMessage("Appended to .gitignore!");
 						return;
@@ -123,7 +121,6 @@ export function activate(context: vscode.ExtensionContext): void {
 					gitignoreUri,
 					Buffer.from(content, "utf8"),
 				);
-				// Save cache after writing
 				await context.globalState.update(gitignoreCacheKey, cacheObj);
 				vscode.window.showInformationMessage(".gitignore generated!");
 			} catch (err: any) {

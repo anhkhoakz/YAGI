@@ -12,14 +12,14 @@ A Visual Studio Code tool called YAGI facilitates the rapid creation and adminis
 [![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/anhkhoakz.yagi?style=for-the-badge)](https://marketplace.visualstudio.com/items/?itemName=anhkhoakz.yagi)
 </div>
 
-
- ## Features
+## Features
 
  Create a fresh.gitignore file using the templates you've chosen (e.g., node, macos, vscode, etc.)
- - Replace or add to an already-existing .gitignore file
- - Gets templates straight from the Toptal API, so you're always getting the most recent suggestions.
 
- ## Application
+- Replace or add to an already-existing .gitignore file
+- Gets templates straight from the Toptal API, so you're always getting the most recent suggestions.
+
+## Application
 
  1. Launch the command palette (Ctrl+Shift+P on Windows/Linux, `Cmd+Shift+P` on macOS).
  2. Type `Generate .gitignore` into the command bar.
@@ -27,26 +27,27 @@ A Visual Studio Code tool called YAGI facilitates the rapid creation and adminis
  4. If a .gitignore already exists, decide whether to append or override it.
  5. Review the generated .gitignore file to ensure it meets your project's needs.
 
- ## Conditions
+## Conditions
 
  A working Internet connection (to retrieve templates from the API) and Visual Studio Code 1.99.0 or later
 
- ## Settings for Extensions
+## Settings for Extensions
 
  No custom settings are added by this plugin.
 
- ## Recognized Problems
+## Recognized Problems
 
  In order to retrieve templates, an internet connection is necessary.
  It only functions in folders that are opened in Visual Studio Code as a workspace.
 
- ## Notes on Release
+## Notes on Release
 
-### 1.0.0-First release: Use the Toptal API to create and manage .gitignore files.
+### 1.0.0-First release: Use the Toptal API to create and manage .gitignore files
+
 ### 1.0.1-Added the ability to append to an existing .gitignore file, update README
 
  ---
 
- ## License
+## License
 
  For more information, see [LICENSE](LICENSE).
