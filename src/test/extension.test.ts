@@ -1,4 +1,7 @@
 import * as assert from "assert";
+import fs from "fs";
+import path from "path";
+import sinon from "sinon";
 import * as vscode from "vscode";
 
 describe("Extension Test Suite", () => {
@@ -8,11 +11,10 @@ describe("Extension Test Suite", () => {
 		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
 	});
 
-	it("should generate a .gitignore file when yagi.generateGitignore is executed", async () => {
-		const sinon = require("sinon");
-		const fs = require("fs");
-		const path = require("path");
-
+	async function setupGitignoreTest({
+		picks = ["node"],
+		overwriteAction = "Override",
+	} = {}) {
 		const globalAny = global as any;
 		const fetchStub = sinon.stub();
 		fetchStub
@@ -23,27 +25,90 @@ describe("Extension Test Suite", () => {
 		globalAny.fetch = fetchStub;
 
 		const qpStub = sinon.stub(vscode.window, "showQuickPick");
-		qpStub.onFirstCall().resolves(["node"]);
-		qpStub.onSecondCall().resolves("Override");
+		qpStub.onFirstCall().resolves(picks);
+		if (overwriteAction) {
+			qpStub.onSecondCall().resolves(overwriteAction);
+		}
 
-		const folders = vscode.workspace.workspaceFolders;
-		assert.ok(folders && folders.length > 0, "No workspace folder");
-		const gitignorePath = path.join(folders[0].uri.fsPath, ".gitignore");
-
-		if (fs.existsSync(gitignorePath)) {
+		let folders = vscode.workspace.workspaceFolders;
+		let gitignorePath =
+			folders && folders.length > 0
+				? path.join(folders[0].uri.fsPath, ".gitignore")
+				: undefined;
+		if (gitignorePath && fs.existsSync(gitignorePath)) {
 			fs.unlinkSync(gitignorePath);
 		}
 
-		await vscode.commands.executeCommand("yagi.generateGitignore");
+		return { fetchStub, qpStub, gitignorePath };
+	}
 
+	afterEach(() => {
+		sinon.restore();
+		const globalAny = global as any;
+		if (globalAny.fetch) delete globalAny.fetch;
+	});
+
+	it("should generate a .gitignore file when yagi.generateGitignore is executed", async () => {
+		const { gitignorePath } = await setupGitignoreTest();
+		await vscode.commands.executeCommand("yagi.generateGitignore");
 		assert.ok(fs.existsSync(gitignorePath), ".gitignore was not created");
 		const content = fs.readFileSync(gitignorePath, "utf8");
 		assert.ok(
 			content.includes("node_modules/"),
 			".gitignore content incorrect",
 		);
-
 		fs.unlinkSync(gitignorePath);
+	});
+
+	it("should append to .gitignore if user selects Append", async () => {
+		const { gitignorePath } = await setupGitignoreTest({
+			overwriteAction: "Append",
+		});
+		fs.writeFileSync(gitignorePath, "# Existing\nfoo\n");
+		await vscode.commands.executeCommand("yagi.generateGitignore");
+		const content = fs.readFileSync(gitignorePath, "utf8");
+		assert.ok(content.includes("# Existing"), "Original content missing");
+		assert.ok(content.includes("node_modules/"), "Appended content missing");
+		fs.unlinkSync(gitignorePath);
+	});
+
+	it("should cancel if user selects Cancel on overwrite", async () => {
+		const { gitignorePath } = await setupGitignoreTest({
+			overwriteAction: "Cancel",
+		});
+		fs.writeFileSync(gitignorePath, "# Existing\nfoo\n");
+		await vscode.commands.executeCommand("yagi.generateGitignore");
+		const content = fs.readFileSync(gitignorePath, "utf8");
+		assert.strictEqual(content, "# Existing\nfoo\n");
+		fs.unlinkSync(gitignorePath);
+	});
+
+	it("should show info if no templates selected", async () => {
+		const { gitignorePath } = await setupGitignoreTest({ picks: [] });
+		await vscode.commands.executeCommand("yagi.generateGitignore");
+		assert.ok(
+			!gitignorePath || !fs.existsSync(gitignorePath),
+			".gitignore should not be created",
+		);
+	});
+
+	it("should show error if no workspace folder", async () => {
+		const foldersStub = sinon
+			.stub(vscode.workspace, "workspaceFolders")
+			.get(() => undefined);
+		const globalAny = global as any;
+		const fetchStub = sinon.stub();
+		fetchStub
+			.onFirstCall()
+			.resolves({ text: async () => "node,macos,vscode" })
+			.onSecondCall()
+			.resolves({ text: async () => "# Node\nnode_modules/\n" });
+		globalAny.fetch = fetchStub;
+		const qpStub = sinon.stub(vscode.window, "showQuickPick");
+		qpStub.onFirstCall().resolves(["node"]);
+		qpStub.onSecondCall().resolves("Override");
+		await vscode.commands.executeCommand("yagi.generateGitignore");
+		foldersStub.restore();
 		qpStub.restore();
 		delete globalAny.fetch;
 	});

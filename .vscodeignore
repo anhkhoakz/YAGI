@@ -16,3 +16,4 @@ biome.json
 changelog.md
 pnpm-lock.yaml
 pnpm-workspace.yaml
+.github/**
