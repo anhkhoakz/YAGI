@@ -33,7 +33,27 @@ A Visual Studio Code tool called YAGI facilitates the rapid creation and adminis
 
 ## Settings for Extensions
 
- No custom settings are added by this plugin.
+YAGI can be configured through VS Code settings. Here are the available options:
+
+- `yagi.templateListTtl`: Time to live for template list cache in milliseconds (default: 24 hours)
+- `yagi.gitignoreCacheTtl`: Time to live for gitignore content cache in milliseconds (default: 1 hour)
+- `yagi.maxCacheSize`: Maximum number of cached gitignore templates (default: 100)
+- `yagi.defaultTemplates`: Array of template names to pre-select when generating .gitignore
+- `yagi.customApiEndpoint`: Custom API endpoint for gitignore templates
+- `yagi.customGitignorePath`: Custom path for .gitignore file (relative to workspace root)
+
+Example settings.json:
+
+```json
+{
+    "yagi.templateListTtl": 86400000,
+    "yagi.gitignoreCacheTtl": 3600000,
+    "yagi.maxCacheSize": 100,
+    "yagi.defaultTemplates": ["node", "vscode"],
+    "yagi.customApiEndpoint": "https://www.toptal.com/developers/gitignore/api",
+    "yagi.customGitignorePath": ".gitignore"
+}
+```
 
 ## Recognized Problems
 
