@@ -1,150 +1,329 @@
 import * as vscode from "vscode";
 
-export function activate(context: vscode.ExtensionContext): void {
-	const templateListKey = "yagi.gitignoreTemplateList";
-	const templateListTimestampKey = "yagi.gitignoreTemplateListTimestamp";
-	const templateListTtl = 24 * 60 * 60 * 1000; // 24 hours
-	const gitignoreCacheKey = "yagi.gitignoreCache";
-	const gitignoreCacheTtl = 60 * 60 * 1000; // 1 hour
+interface YagiConfig {
+	templateListTtl: number;
+	gitignoreCacheTtl: number;
+	maxCacheSize: number;
+	defaultTemplates: string[];
+	customApiEndpoint?: string;
+	customGitignorePath?: string;
+}
 
-	const disposable: vscode.Disposable = vscode.commands.registerCommand(
-		"yagi.helloWorld",
-		(): void => {
-			vscode.window.showInformationMessage("Hello World from YAGI!");
-		},
-	);
+interface GitignoreTemplate {
+	label: string;
+	description?: string;
+	picked?: boolean;
+}
 
-	context.subscriptions.push(disposable);
+interface CacheEntry {
+	content: string;
+	timestamp: number;
+}
 
-	const giDisposable: vscode.Disposable = vscode.commands.registerCommand(
-		"yagi.generateGitignore",
-		async (): Promise<void> => {
-			try {
-				let templates: string[] | undefined = undefined;
-				const now = Date.now();
-				const cachedList = context.globalState.get<string[]>(templateListKey);
-				const cachedListTimestamp = context.globalState.get<number>(
-					templateListTimestampKey,
-				);
-				if (
-					cachedList &&
-					cachedListTimestamp &&
-					now - cachedListTimestamp < templateListTtl
-				) {
-					templates = cachedList;
-				} else {
-					const listResp: Response = await fetch(
-						"https://www.toptal.com/developers/gitignore/api/list",
-					);
-					const listText: string = await listResp.text();
-					templates = listText
-						.split(/,|\n/)
-						.map((t: string) => t.trim())
-						.filter(Boolean);
-					await context.globalState.update(templateListKey, templates);
-					await context.globalState.update(templateListTimestampKey, now);
-				}
+interface CacheObject {
+	[key: string]: CacheEntry;
+}
 
-				const picks = await vscode.window.showQuickPick(
-					templates.map((t) => ({ label: t })),
-					{
-						canPickMany: true,
-						placeHolder:
-							"Select gitignore templates (e.g. node, macos, vscode)",
-					},
-				);
-				if (!picks || picks.length === 0) {
-					vscode.window.showInformationMessage("No templates selected.");
-					return;
-				}
-				const selectedTemplates = picks.map((p) => p.label);
+class YagiExtension {
+	private readonly context: vscode.ExtensionContext;
+	private readonly config: YagiConfig;
+	private readonly templateListKey = "yagi.gitignoreTemplateList";
+	private readonly templateListTimestampKey =
+		"yagi.gitignoreTemplateListTimestamp";
+	private readonly gitignoreCacheKey = "yagi.gitignoreCache";
 
-				const apiKey = selectedTemplates.sort().join(",");
-				const cacheObj =
-					context.globalState.get<
-						Record<string, { content: string; timestamp: number }>
-					>(gitignoreCacheKey) || {};
-				let content: string | undefined = undefined;
-				if (
-					cacheObj[apiKey] &&
-					now - cacheObj[apiKey].timestamp < gitignoreCacheTtl
-				) {
-					content = cacheObj[apiKey].content;
-				} else {
-					const apiUrl: string = `https://www.toptal.com/developers/gitignore/api/${selectedTemplates.join(",")}`;
-					const resp: Response = await fetch(apiUrl);
-					content = await resp.text();
-					cacheObj[apiKey] = { content, timestamp: now };
-					await context.globalState.update(gitignoreCacheKey, cacheObj);
-				}
+	constructor(context: vscode.ExtensionContext) {
+		this.context = context;
+		const config = vscode.workspace.getConfiguration("yagi");
+		this.config = {
+			templateListTtl: config.get("templateListTtl") || 24 * 60 * 60 * 1000,
+			gitignoreCacheTtl: config.get("gitignoreCacheTtl") || 60 * 60 * 1000,
+			maxCacheSize: config.get("maxCacheSize") || 100,
+			defaultTemplates: config.get("defaultTemplates") || [],
+			customApiEndpoint: config.get("customApiEndpoint"),
+			customGitignorePath: config.get("customGitignorePath"),
+		};
+	}
 
-				const folders: readonly vscode.WorkspaceFolder[] | undefined =
-					vscode.workspace.workspaceFolders;
-				if (!folders || folders.length === 0) {
-					vscode.window.showErrorMessage("No workspace folder open.");
-					return;
-				}
-				const gitignoreUri = vscode.Uri.joinPath(folders[0].uri, ".gitignore");
+	private async fetchTemplates(): Promise<string[]> {
+		const apiEndpoint =
+			this.config.customApiEndpoint ||
+			"https://www.toptal.com/developers/gitignore/api/list";
+		const response = await fetch(apiEndpoint);
 
-				let exists = false;
-				try {
-					await vscode.workspace.fs.stat(gitignoreUri);
-					exists = true;
-				} catch {
-					exists = false;
-				}
+		if (!response.ok) {
+			throw new Error(
+				`Failed to fetch templates: ${response.status} ${response.statusText}`,
+			);
+		}
 
-				if (exists) {
-					const action: string | undefined = await vscode.window.showQuickPick(
-						["Override", "Append", "Cancel"],
-						{
-							placeHolder: ".gitignore already exists. What do you want to do?",
-						},
-					);
-					if (action === "Cancel" || !action) {
-						vscode.window.showInformationMessage("Operation cancelled.");
-						return;
-					} else if (action === "Append") {
-						const oldContent = Buffer.from(
-							await vscode.workspace.fs.readFile(gitignoreUri),
-						).toString("utf8");
-						const newContent = oldContent + "\n" + content;
-						await vscode.workspace.fs.writeFile(
-							gitignoreUri,
-							Buffer.from(newContent, "utf8"),
-						);
-						await context.globalState.update(gitignoreCacheKey, cacheObj);
-						vscode.window.showInformationMessage("Appended to .gitignore!");
-						return;
-					}
-				}
-				await vscode.workspace.fs.writeFile(
-					gitignoreUri,
-					Buffer.from(content, "utf8"),
-				);
-				await context.globalState.update(gitignoreCacheKey, cacheObj);
-				vscode.window.showInformationMessage(".gitignore generated!");
-			} catch (err: any) {
-				vscode.window.showErrorMessage(
-					"Failed to generate .gitignore: " + (err?.message || String(err)),
-				);
-			}
-		},
-	);
+		const text = await response.text();
+		return text
+			.split(/,|\n/)
+			.map((t) => t.trim())
+			.filter(Boolean);
+	}
 
-	context.subscriptions.push(giDisposable);
+	private async getTemplates(): Promise<string[]> {
+		const now = Date.now();
+		const cachedList = this.context.globalState.get<string[]>(
+			this.templateListKey,
+		);
+		const cachedListTimestamp = this.context.globalState.get<number>(
+			this.templateListTimestampKey,
+		);
 
-	const clearCacheDisposable: vscode.Disposable =
-		vscode.commands.registerCommand(
-			"yagi.clearCache",
-			async (): Promise<void> => {
-				await context.globalState.update(templateListKey, undefined);
-				await context.globalState.update(templateListTimestampKey, undefined);
-				await context.globalState.update(gitignoreCacheKey, undefined);
-				vscode.window.showInformationMessage("YAGI cache cleared.");
+		if (
+			this.isCacheValid(
+				cachedList,
+				cachedListTimestamp,
+				now,
+				this.config.templateListTtl,
+			)
+		) {
+			return cachedList!;
+		}
+
+		const templates = await this.fetchTemplates();
+		await this.updateTemplateCache(templates, now);
+		return templates;
+	}
+
+	private isCacheValid<T>(
+		cached: T | undefined,
+		timestamp: number | undefined,
+		now: number,
+		ttl: number,
+	): boolean {
+		return Boolean(cached && timestamp && now - timestamp < ttl);
+	}
+
+	private async updateTemplateCache(
+		templates: string[],
+		timestamp: number,
+	): Promise<void> {
+		await this.context.globalState.update(this.templateListKey, templates);
+		await this.context.globalState.update(
+			this.templateListTimestampKey,
+			timestamp,
+		);
+	}
+
+	private async getGitignoreContent(templates: string[]): Promise<string> {
+		const now = Date.now();
+		const apiKey = templates.sort().join(",");
+		const cacheObj =
+			this.context.globalState.get<CacheObject>(this.gitignoreCacheKey) || {};
+
+		if (
+			this.isCacheValid(
+				cacheObj[apiKey]?.content,
+				cacheObj[apiKey]?.timestamp,
+				now,
+				this.config.gitignoreCacheTtl,
+			)
+		) {
+			return cacheObj[apiKey].content;
+		}
+
+		const content = await this.fetchGitignoreContent(templates);
+		await this.updateGitignoreCache(cacheObj, apiKey, content, now);
+		return content;
+	}
+
+	private async fetchGitignoreContent(templates: string[]): Promise<string> {
+		const apiEndpoint =
+			this.config.customApiEndpoint ||
+			"https://www.toptal.com/developers/gitignore/api";
+		const apiUrl = `${apiEndpoint}/${templates.join(",")}`;
+		const response = await fetch(apiUrl);
+
+		if (!response.ok) {
+			throw new Error(
+				`Failed to generate .gitignore: ${response.status} ${response.statusText}`,
+			);
+		}
+
+		return response.text();
+	}
+
+	private async updateGitignoreCache(
+		cacheObj: CacheObject,
+		apiKey: string,
+		content: string,
+		timestamp: number,
+	): Promise<void> {
+		cacheObj[apiKey] = { content, timestamp };
+		await this.cleanupCache(cacheObj);
+		await this.context.globalState.update(this.gitignoreCacheKey, cacheObj);
+	}
+
+	private async cleanupCache(cacheObj: CacheObject): Promise<void> {
+		const entries = Object.entries(cacheObj);
+		if (entries.length > this.config.maxCacheSize) {
+			const sortedEntries = entries.sort(
+				(a, b) => b[1].timestamp - a[1].timestamp,
+			);
+			const newCacheObj = Object.fromEntries(
+				sortedEntries.slice(0, this.config.maxCacheSize),
+			);
+			await this.context.globalState.update(
+				this.gitignoreCacheKey,
+				newCacheObj,
+			);
+		}
+	}
+
+	private async writeGitignore(
+		content: string,
+		gitignorePath: string,
+	): Promise<void> {
+		const folders = vscode.workspace.workspaceFolders;
+		if (!folders || folders.length === 0) {
+			throw new Error("No workspace folder open");
+		}
+
+		const gitignoreUri = vscode.Uri.joinPath(folders[0].uri, gitignorePath);
+		const exists = await this.checkFileExists(gitignoreUri);
+
+		if (exists) {
+			await this.handleExistingGitignore(gitignoreUri, content, gitignorePath);
+		} else {
+			await this.createNewGitignore(gitignoreUri, content, gitignorePath);
+		}
+	}
+
+	private async checkFileExists(uri: vscode.Uri): Promise<boolean> {
+		try {
+			await vscode.workspace.fs.stat(uri);
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
+	private async handleExistingGitignore(
+		uri: vscode.Uri,
+		content: string,
+		gitignorePath: string,
+	): Promise<void> {
+		const action = await vscode.window.showQuickPick(
+			["Override", "Append", "Cancel"],
+			{
+				placeHolder: `${gitignorePath} already exists. What do you want to do?`,
 			},
 		);
-	context.subscriptions.push(clearCacheDisposable);
+
+		if (action === "Cancel" || !action) {
+			vscode.window.showInformationMessage("Operation cancelled.");
+			return;
+		}
+
+		if (action === "Append") {
+			await this.appendToGitignore(uri, content, gitignorePath);
+		} else {
+			await this.createNewGitignore(uri, content, gitignorePath);
+		}
+	}
+
+	private async appendToGitignore(
+		uri: vscode.Uri,
+		content: string,
+		gitignorePath: string,
+	): Promise<void> {
+		const oldContent = Buffer.from(
+			await vscode.workspace.fs.readFile(uri),
+		).toString("utf8");
+		const newContent = oldContent + "\n" + content;
+		await vscode.workspace.fs.writeFile(uri, Buffer.from(newContent, "utf8"));
+		vscode.window.showInformationMessage(`Appended to ${gitignorePath}!`);
+	}
+
+	private async createNewGitignore(
+		uri: vscode.Uri,
+		content: string,
+		gitignorePath: string,
+	): Promise<void> {
+		await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf8"));
+		vscode.window.showInformationMessage(`${gitignorePath} generated!`);
+	}
+
+	public async generateGitignore(): Promise<void> {
+		try {
+			const templates = await this.getTemplates();
+			if (!templates || templates.length === 0) {
+				throw new Error("No templates available");
+			}
+
+			const picks = await this.showTemplatePicker(templates);
+			if (!picks || picks.length === 0) {
+				vscode.window.showInformationMessage("No templates selected.");
+				return;
+			}
+
+			const selectedTemplates = picks.map((p) => p.label);
+			const content = await this.getGitignoreContent(selectedTemplates);
+			const gitignorePath = this.config.customGitignorePath || ".gitignore";
+			await this.writeGitignore(content, gitignorePath);
+		} catch (err: any) {
+			const errorMessage = err?.message || String(err);
+			vscode.window
+				.showErrorMessage(
+					`Failed to generate .gitignore: ${errorMessage}`,
+					"Retry",
+					"Cancel",
+				)
+				.then((selection) => {
+					if (selection === "Retry") {
+						vscode.commands.executeCommand("yagi.generateGitignore");
+					}
+				});
+		}
+	}
+
+	private async showTemplatePicker(
+		templates: string[],
+	): Promise<GitignoreTemplate[] | undefined> {
+		return vscode.window.showQuickPick(
+			templates.map((t) => ({
+				label: t,
+				description: this.config.defaultTemplates.includes(t)
+					? "Default template"
+					: undefined,
+				picked: this.config.defaultTemplates.includes(t),
+			})),
+			{
+				canPickMany: true,
+				placeHolder: "Select gitignore templates (e.g. node, macos, vscode)",
+			},
+		);
+	}
+
+	public async clearCache(): Promise<void> {
+		await this.context.globalState.update(this.templateListKey, undefined);
+		await this.context.globalState.update(
+			this.templateListTimestampKey,
+			undefined,
+		);
+		await this.context.globalState.update(this.gitignoreCacheKey, undefined);
+		vscode.window.showInformationMessage("YAGI cache cleared.");
+	}
+}
+
+export function activate(context: vscode.ExtensionContext): void {
+	const yagi = new YagiExtension(context);
+
+	const giDisposable = vscode.commands.registerCommand(
+		"yagi.generateGitignore",
+		() => yagi.generateGitignore(),
+	);
+
+	const clearCacheDisposable = vscode.commands.registerCommand(
+		"yagi.clearCache",
+		() => yagi.clearCache(),
+	);
+
+	context.subscriptions.push(giDisposable, clearCacheDisposable);
 }
 
 export function deactivate(): void {}

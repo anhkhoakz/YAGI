@@ -7,8 +7,17 @@ import * as vscode from "vscode";
 describe("Extension Test Suite", () => {
 	vscode.window.showInformationMessage("Start all tests.");
 
-	it("Sample test", () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
+	it("should activate extension", async () => {
+		const ext = vscode.extensions.getExtension("yagi");
+		assert.ok(ext);
+		await ext?.activate();
+		assert.strictEqual(ext?.isActive, true);
+	});
+
+	it("should show hello world message", async () => {
+		const showInfoStub = sinon.stub(vscode.window, "showInformationMessage");
+		await vscode.commands.executeCommand("yagi.helloWorld");
+		assert.ok(showInfoStub.calledWith("Hello World from YAGI!"));
 	});
 
 	async function setupGitignoreTest({
@@ -25,8 +34,6 @@ describe("Extension Test Suite", () => {
 		globalAny.fetch = fetchStub;
 
 		const qpStub = sinon.stub(vscode.window, "showQuickPick");
-		// Wrap picks as QuickPickItem objects if they are strings
-		// showQuickPick should resolve to a single QuickPickItem or undefined
 		if (picks.length > 0) {
 			qpStub.onFirstCall().resolves({ label: picks[0] });
 		} else {
@@ -113,20 +120,36 @@ describe("Extension Test Suite", () => {
 		const foldersStub = sinon
 			.stub(vscode.workspace, "workspaceFolders")
 			.get(() => undefined);
+		const showErrorStub = sinon.stub(vscode.window, "showErrorMessage");
+		await vscode.commands.executeCommand("yagi.generateGitignore");
+		assert.ok(showErrorStub.calledWith("No workspace folder open."));
+		foldersStub.restore();
+	});
+
+	it("should clear cache when yagi.clearCache is executed", async () => {
+		const showInfoStub = sinon.stub(vscode.window, "showInformationMessage");
+		const updateStub = sinon.stub(
+			vscode.extensions.getExtension("yagi")?.exports.context.globalState,
+			"update",
+		);
+
+		await vscode.commands.executeCommand("yagi.clearCache");
+
+		assert.ok(showInfoStub.calledWith("YAGI cache cleared."));
+		assert.ok(updateStub.calledThrice); // Called three times to clear all cache keys
+	});
+
+	it("should handle fetch errors gracefully", async () => {
 		const globalAny = global as any;
 		const fetchStub = sinon.stub();
-		fetchStub
-			.onFirstCall()
-			.resolves({ text: async () => "node,macos,vscode" })
-			.onSecondCall()
-			.resolves({ text: async () => "# Node\nnode_modules/\n" });
+		fetchStub.rejects(new Error("Network error"));
 		globalAny.fetch = fetchStub;
-		const qpStub = sinon.stub(vscode.window, "showQuickPick");
-		qpStub.onFirstCall().resolves({ label: "node" });
-		qpStub.onSecondCall().resolves({ label: "Override" });
+
+		const showErrorStub = sinon.stub(vscode.window, "showErrorMessage");
 		await vscode.commands.executeCommand("yagi.generateGitignore");
-		foldersStub.restore();
-		qpStub.restore();
-		delete globalAny.fetch;
+
+		assert.ok(
+			showErrorStub.calledWith(sinon.match(/Failed to generate .gitignore/)),
+		);
 	});
 });
