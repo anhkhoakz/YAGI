@@ -1,127 +1,127 @@
 {
-	"name": "yagi",
-	"displayName": "YAGI",
-	"description": "Yet! Another .gitignore",
-	"version": "0.0.6",
-	"engines": {
-		"node": "^23.6.0",
-		"bun": "^1.2.13",
-		"vscode": "^1.80.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"onCommand:yagi.generateGitignore",
-		"onStartupFinished"
-	],
-	"capabilities": {
-		"virtualWorkspaces": true,
-		"untrustedWorkspaces": {
-			"supported": true
-		}
-	},
-	"keywords": [
-		"gitignore",
-		"git",
-		"ignore",
-		"templates",
-		"cursor",
-		"vscode",
-		"vscodium"
-	],
-	"main": "./dist/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "yagi.generateGitignore",
-				"title": "Generate .gitignore"
-			}
-		],
-		"configuration": {
-			"title": "YAGI",
-			"properties": {
-				"yagi.templateListTtl": {
-					"type": "number",
-					"default": 86400000,
-					"description": "Time to live for template list cache in milliseconds (24 hours)"
-				},
-				"yagi.gitignoreCacheTtl": {
-					"type": "number",
-					"default": 3600000,
-					"description": "Time to live for gitignore content cache in milliseconds (1 hour)"
-				},
-				"yagi.maxCacheSize": {
-					"type": "number",
-					"default": 100,
-					"description": "Maximum number of cached gitignore templates"
-				},
-				"yagi.defaultTemplates": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					},
-					"default": [],
-					"description": "Default templates to pre-select when generating .gitignore"
-				},
-				"yagi.customApiEndpoint": {
-					"type": "string",
-					"description": "Custom API endpoint for gitignore templates (e.g. https://www.toptal.com/developers/gitignore/api)"
-				},
-				"yagi.customGitignorePath": {
-					"type": "string",
-					"description": "Custom path for .gitignore file (relative to workspace root)"
-				}
-			}
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "bun run package",
-		"compile": "webpack",
-		"watch": "webpack --watch",
-		"package": "webpack --mode production --devtool hidden-source-map",
-		"compile-tests": "tsc -p . --outDir out",
-		"watch-tests": "tsc -p . -w --outDir out",
-		"pretest": "bun run compile-tests && bun run compile && bun run lint",
-		"lint": "biome lint src/ --write --unsafe",
-		"format": "biome format src/ --write",
-		"test": "vscode-test"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.2.5",
-		"@types/mocha": "^10.0.10",
-		"@types/node": "^24.7.1",
-		"@types/sinon": "^17.0.4",
-		"@types/vscode": "^1.105.0",
-		"@typescript-eslint/eslint-plugin": "^8.46.0",
-		"@typescript-eslint/parser": "^8.46.0",
-		"@vscode/test-cli": "^0.0.12",
-		"@vscode/test-electron": "^2.5.2",
-		"eslint": "^9.37.0",
-		"sinon": "^21.0.0",
-		"ts-loader": "^9.5.4",
-		"typescript": "^5.9.3",
-		"webpack": "^5.102.1",
-		"webpack-cli": "^6.0.1"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/anhkhoakz/YAGI.git"
-	},
-	"license": "GPL-3.0-only",
-	"icon": "assets/icon.png",
-	"publisher": "anhkhoakz",
-	"homepage": "https://github.com/anhkhoakz/YAGI#readme",
-	"author": {
-		"name": "anhkhoakz",
-		"url": "https://www.anhkhoakz.dev/"
-	},
-	"engineStrict": false,
-	"private": false,
-	"bugs": {
-		"url": "https://github.com/anhkhoakz/YAGI/issues"
-	},
-	"trustedDependencies": [
-		"@biomejs/biome"
-	]
+        "name": "yagi",
+        "displayName": "YAGI",
+        "description": "Yet! Another .gitignore",
+        "version": "0.1.0",
+        "engines": {
+                "node": "^23.6.0",
+                "bun": "^1.2.13",
+                "vscode": "^1.105.0"
+        },
+        "categories": [
+                "Other"
+        ],
+        "activationEvents": [
+                "onCommand:yagi.generateGitignore",
+                "onStartupFinished"
+        ],
+        "capabilities": {
+                "virtualWorkspaces": true,
+                "untrustedWorkspaces": {
+                        "supported": true
+                }
+        },
+        "keywords": [
+                "gitignore",
+                "git",
+                "ignore",
+                "templates",
+                "cursor",
+                "vscode",
+                "vscodium"
+        ],
+        "main": "./dist/extension.js",
+        "contributes": {
+                "commands": [
+                        {
+                                "command": "yagi.generateGitignore",
+                                "title": "Generate .gitignore"
+                        }
+                ],
+                "configuration": {
+                        "title": "YAGI",
+                        "properties": {
+                                "yagi.templateListTtl": {
+                                        "type": "number",
+                                        "default": 86400000,
+                                        "description": "Time to live for template list cache in milliseconds (24 hours)"
+                                },
+                                "yagi.gitignoreCacheTtl": {
+                                        "type": "number",
+                                        "default": 3600000,
+                                        "description": "Time to live for gitignore content cache in milliseconds (1 hour)"
+                                },
+                                "yagi.maxCacheSize": {
+                                        "type": "number",
+                                        "default": 100,
+                                        "description": "Maximum number of cached gitignore templates"
+                                },
+                                "yagi.defaultTemplates": {
+                                        "type": "array",
+                                        "items": {
+                                                "type": "string"
+                                        },
+                                        "default": [],
+                                        "description": "Default templates to pre-select when generating .gitignore"
+                                },
+                                "yagi.customApiEndpoint": {
+                                        "type": "string",
+                                        "description": "Custom API endpoint for gitignore templates (e.g. https://www.toptal.com/developers/gitignore/api)"
+                                },
+                                "yagi.customGitignorePath": {
+                                        "type": "string",
+                                        "description": "Custom path for .gitignore file (relative to workspace root)"
+                                }
+                        }
+                }
+        },
+        "scripts": {
+                "vscode:prepublish": "bun run package",
+                "compile": "webpack",
+                "watch": "webpack --watch",
+                "package": "webpack --mode production --devtool hidden-source-map",
+                "compile-tests": "tsc -p . --outDir out",
+                "watch-tests": "tsc -p . -w --outDir out",
+                "pretest": "bun run compile-tests && bun run compile && bun run lint",
+                "lint": "biome lint src/ --write --unsafe",
+                "format": "biome format src/ --write",
+                "test": "vscode-test"
+        },
+        "devDependencies": {
+                "@biomejs/biome": "^2.2.5",
+                "@types/mocha": "^10.0.10",
+                "@types/node": "^24.7.1",
+                "@types/sinon": "^17.0.4",
+                "@types/vscode": "^1.105.0",
+                "@typescript-eslint/eslint-plugin": "^8.46.0",
+                "@typescript-eslint/parser": "^8.46.0",
+                "@vscode/test-cli": "^0.0.12",
+                "@vscode/test-electron": "^2.5.2",
+                "eslint": "^9.37.0",
+                "sinon": "^21.0.0",
+                "ts-loader": "^9.5.4",
+                "typescript": "^5.9.3",
+                "webpack": "^5.102.1",
+                "webpack-cli": "^6.0.1"
+        },
+        "repository": {
+                "type": "git",
+                "url": "https://github.com/anhkhoakz/YAGI.git"
+        },
+        "license": "GPL-3.0-only",
+        "icon": "assets/icon.png",
+        "publisher": "anhkhoakz",
+        "homepage": "https://github.com/anhkhoakz/YAGI#readme",
+        "author": {
+                "name": "anhkhoakz",
+                "url": "https://www.anhkhoakz.dev/"
+        },
+        "engineStrict": false,
+        "private": false,
+        "bugs": {
+                "url": "https://github.com/anhkhoakz/YAGI/issues"
+        },
+        "trustedDependencies": [
+                "@biomejs/biome"
+        ]
 }
