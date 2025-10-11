@@ -4,8 +4,7 @@
         "description": "Yet! Another .gitignore",
         "version": "0.1.0",
         "engines": {
-                "node": "^23.6.0",
-                "bun": "^1.2.13",
+                "node": "^24.10.0",
                 "vscode": "^1.105.0"
         },
         "categories": [
