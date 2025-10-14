@@ -46,10 +46,13 @@ const TEMPLATE_SPLIT_REGEX = /,|\n/;
 class YagiExtension {
     private readonly context: vscode.ExtensionContext;
     private readonly config: YagiConfig;
+    private readonly statusBarItem: vscode.StatusBarItem;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
         this.config = this.loadConfiguration();
+        this.statusBarItem = this.createStatusBarItem();
+        this.statusBarItem.show();
     }
 
     private loadConfiguration(): YagiConfig {
@@ -143,6 +146,16 @@ class YagiExtension {
         const content = await this.fetchGitignoreContent(templates);
         await this.updateGitignoreCache(cacheObj, cacheKey, content, now);
         return content;
+    }
+
+    // Show preview before applying
+    async showTemplatePreview(templates: string[]): Promise<void> {
+        const content = await this.getGitignoreContent(templates);
+        const doc = await vscode.workspace.openTextDocument({
+            content,
+            language: 'gitignore',
+        });
+        await vscode.window.showTextDocument(doc, { preview: true });
     }
 
     private async fetchGitignoreContent(templates: string[]): Promise<string> {
@@ -296,20 +309,76 @@ class YagiExtension {
     }
 
     private showTemplatePicker(templates: string[]): Thenable<GitignoreTemplate[] | undefined> {
-        const items: GitignoreTemplate[] = templates.map((template) => ({
-            label: template,
-            description: this.config.defaultTemplates.includes(template)
-                ? 'Default template'
-                : undefined,
-            picked: this.config.defaultTemplates.includes(template),
-        }));
+        const defaultSet = new Set(this.config.defaultTemplates.map((t) => t.toLowerCase()));
+        // prepare suggestions, but don't block UI if detection fails
+        const suggestionsPromise = this.detectProjectType().catch(() => [] as string[]);
 
-        return vscode.window.showQuickPick(items, {
-            canPickMany: true,
-            placeHolder: 'Select gitignore templates (e.g., Node, macOS, VisualStudioCode)',
-            ignoreFocusOut: true,
-            matchOnDescription: true,
+        return suggestionsPromise.then((suggestions) => {
+            const suggestedSet = new Set(suggestions.map((s) => s.toLowerCase()));
+            const items: GitignoreTemplate[] = templates.map((template) => {
+                const key = template.toLowerCase();
+                const isDefault = defaultSet.has(key);
+                const isSuggested = suggestedSet.has(key);
+                return {
+                    label: template,
+                    description: isDefault ? 'Default template' : isSuggested ? 'Suggested' : undefined,
+                    picked: isDefault || isSuggested,
+                };
+            });
+
+            return vscode.window.showQuickPick(items, {
+                canPickMany: true,
+                placeHolder: 'Select gitignore templates (e.g., Node, macOS, VisualStudioCode)',
+                ignoreFocusOut: true,
+                matchOnDescription: true,
+            });
         });
+    }
+
+    // Auto-detect project type and OS for smart suggestions
+    private async detectProjectType(): Promise<string[]> {
+        const workspaceFolder = this.getWorkspaceFolder();
+        const suggestions: string[] = [];
+
+        const exists = async (p: string): Promise<boolean> =>
+            this.checkFileExists(vscode.Uri.joinPath(workspaceFolder.uri, p));
+
+        if (await exists('package.json')) suggestions.push('Node');
+        if (await exists('pnpm-lock.yaml') || await exists('yarn.lock')) suggestions.push('Node');
+        if (await exists('pom.xml')) suggestions.push('Maven', 'Java');
+        if (await exists('build.gradle') || await exists('build.gradle.kts')) suggestions.push('Gradle', 'Java');
+        if (await exists('requirements.txt') || await exists('pyproject.toml')) suggestions.push('Python');
+        if (await exists('go.mod')) suggestions.push('Go');
+        if (await exists('Cargo.toml')) suggestions.push('Rust');
+        if (await exists('Gemfile')) suggestions.push('Ruby');
+        if (await exists('composer.json')) suggestions.push('PHP');
+        if (await exists('Packages/manifest.json') || await exists('Assets')) suggestions.push('Unity');
+        if (await exists('CMakeLists.txt')) suggestions.push('C');
+
+        if (process.platform === 'darwin') suggestions.push('macOS');
+        if (process.platform === 'win32') suggestions.push('Windows');
+        if (process.platform === 'linux') suggestions.push('Linux');
+
+        return suggestions;
+    }
+
+    // Provide a dedicated preview flow
+    async previewGitignore(): Promise<void> {
+        try {
+            const templates = await this.getTemplates();
+            if (templates.length === 0) {
+                vscode.window.showWarningMessage('No templates are available from the API.');
+                return;
+            }
+            const selected = await this.showTemplatePicker(templates);
+            if (!selected || selected.length === 0) {
+                vscode.window.showInformationMessage('No templates selected.');
+                return;
+            }
+            await this.showTemplatePreview(selected.map((t) => t.label));
+        } catch (error) {
+            await this.handleError(error);
+        }
     }
 
     private async handleError(error: unknown): Promise<void> {
@@ -339,6 +408,15 @@ class YagiExtension {
 
         vscode.window.showInformationMessage('YAGI cache cleared successfully.');
     }
+
+    // Add status bar item for quick access
+    private createStatusBarItem(): vscode.StatusBarItem {
+        const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+        item.text = '$(file-code) GitIgnore';
+        item.command = 'yagi.generateGitignore';
+        item.tooltip = 'Generate .gitignore';
+        return item;
+    }
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -348,11 +426,15 @@ export function activate(context: vscode.ExtensionContext): void {
         yagi.generateGitignore()
     );
 
+    const previewCommand = vscode.commands.registerCommand('yagi.previewGitignore', async () =>
+        yagi.previewGitignore()
+    );
+
     const clearCacheCommand = vscode.commands.registerCommand('yagi.clearCache', async () =>
         yagi.clearCache()
     );
 
-    context.subscriptions.push(generateCommand, clearCacheCommand);
+    context.subscriptions.push(generateCommand, previewCommand, clearCacheCommand);
 }
 
 export function deactivate(): void {

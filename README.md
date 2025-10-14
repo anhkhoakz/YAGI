@@ -4,81 +4,110 @@
 
 ## YET! ANOTHER .GITIGNORE
 
-A Visual Studio Code tool called YAGI facilitates the rapid creation and
-administration of .gitignore files for your projects. It retrieves current
-templates for a variety of languages, tools, and environments using the
-[Toptal gitignore API](https://www.toptal.com/developers/gitignore).
+A powerful Visual Studio Code extension that simplifies creating and managing `.gitignore` files for your projects. YAGI fetches up-to-date templates for various languages, frameworks, tools, and environments using the [Toptal gitignore API](https://www.toptal.com/developers/gitignore).
 
 [![Open VSX Downloads](https://img.shields.io/open-vsx/dt/anhkhoakz/yagi?label=Open%20VSX%20Downloads&logo=data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHN2ZyB2aWV3Qm94PSI0LjYgNSA5Ni4yIDEyMi43IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxwYXRoIGQ9Ik0zMCA0NC4yTDUyLjYgNUg3LjN6TTQuNiA4OC41aDQ1LjNMMjcuMiA0OS40em01MSAwbDIyLjYgMzkuMiAyMi42LTM5LjJ6IiBmaWxsPSIjYzE2MGVmIi8+CiAgPHBhdGggZD0iTTUyLjYgNUwzMCA0NC4yaDQ1LjJ6TTI3LjIgNDkuNGwyMi43IDM5LjEgMjIuNi0zOS4xem01MSAwTDU1LjYgODguNWg0NS4yeiIgZmlsbD0iI2E2MGVlNSIvPgo8L3N2Zz4=&labelColor=374151&color=60a5fa&style=for-the-badge)](http://open-vsx.org/extension/anhkhoakz/yagi)
 [![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/anhkhoakz.yagi?style=for-the-badge)](https://marketplace.visualstudio.com/items/?itemName=anhkhoakz.yagi)
 
 ## Features
 
-Create a fresh.gitignore file using the templates you've chosen (e.g., node,
-macos, vscode, etc.)
+### 🚀 Smart Template Suggestions
+YAGI automatically detects your project type by analyzing common files (e.g., `package.json`, `pom.xml`, `requirements.txt`, `go.mod`) and suggests relevant templates. It also pre-selects OS-specific templates based on your platform.
 
-- Replace or add to an already-existing .gitignore file
-- Gets templates straight from the Toptal API, so you're always getting the most
-recent suggestions.
+### 👁️ Template Preview
+Preview the generated `.gitignore` content before applying it to your project, ensuring you know exactly what will be ignored.
 
-## Application
+### ⚡ Quick Access
+A convenient status bar item provides one-click access to generate `.gitignore` files without opening the command palette.
 
- 1. Launch the command palette (Ctrl+Shift+P on Windows/Linux, `Cmd+Shift+P` on
- macOS).
- 2. Type `Generate .gitignore` into the command bar.
- 3. Choose one or more templates (such as `node`, `macos`, or `vscode`) from the
- list.
- 4. If a .gitignore already exists, decide whether to append or override it.
- 5. Review the generated .gitignore file to ensure it meets your project's
- needs.
+### 🔄 Flexible File Management
+- Create a new `.gitignore` file from scratch
+- Override an existing `.gitignore` file
+- Append templates to an existing `.gitignore` file
 
-## Conditions
+### 📦 Always Up-to-Date
+Fetches templates directly from the Toptal API, ensuring you always get the most recent and comprehensive ignore patterns.
 
- A working Internet connection (to retrieve templates from the API) and Visual
- Studio Code 1.99.0 or later
+### 💾 Intelligent Caching
+Built-in caching system reduces API calls and improves performance, with configurable TTL settings.
 
-## Settings for Extensions
+## Usage
 
-YAGI can be configured through VS Code settings. Here are the available options:
+### Quick Start
+1. Click the **GitIgnore** button in the status bar (bottom-right corner)
+2. Select templates from the list (smart suggestions will be pre-selected)
+3. Choose to create, override, or append to your `.gitignore` file
 
-- `yagi.templateListTtl`: Time to live for template list cache in milliseconds
-(default: 24 hours)
-- `yagi.gitignoreCacheTtl`: Time to live for gitignore content cache in
-milliseconds (default: 1 hour)
-- `yagi.maxCacheSize`: Maximum number of cached gitignore templates
-(default: 100)
-- `yagi.defaultTemplates`: Array of template names to pre-select when generating
-.gitignore
-- `yagi.customApiEndpoint`: Custom API endpoint for gitignore templates
-- `yagi.customGitignorePath`: Custom path for .gitignore file (relative to
-workspace root)
+### Command Palette
+1. Open the command palette (`Ctrl+Shift+P` on Windows/Linux, `Cmd+Shift+P` on macOS)
+2. Run one of these commands:
+   - **Generate .gitignore** - Create or update your `.gitignore` file
+   - **Preview .gitignore from templates** - Preview templates before applying
+   - **YAGI: Clear Cache** - Clear cached templates and content
 
-Example settings.json:
+### Smart Suggestions
+YAGI automatically suggests templates based on:
+- **Project files**: Detects Node, Python, Java, Go, Rust, Ruby, PHP, Unity, C/C++, and more
+- **Operating system**: Automatically includes macOS, Windows, or Linux templates
+- **User preferences**: Pre-selects templates defined in your settings
+
+## Requirements
+
+- Visual Studio Code 1.105.0 or later
+- Active internet connection (to fetch templates from the API)
+- An open workspace folder
+
+## Configuration
+
+YAGI can be customized through VS Code settings:
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `yagi.templateListTtl` | number | `86400000` | Cache duration for template list (24 hours in ms) |
+| `yagi.gitignoreCacheTtl` | number | `3600000` | Cache duration for gitignore content (1 hour in ms) |
+| `yagi.maxCacheSize` | number | `100` | Maximum number of cached gitignore templates |
+| `yagi.defaultTemplates` | array | `[]` | Templates to pre-select (e.g., `["node", "vscode"]`) |
+| `yagi.customApiEndpoint` | string | `null` | Custom API endpoint for gitignore templates |
+| `yagi.customGitignorePath` | string | `".gitignore"` | Custom path for .gitignore file (relative to workspace root) |
+
+### Example Configuration
 
 ```json
 {
     "yagi.templateListTtl": 86400000,
     "yagi.gitignoreCacheTtl": 3600000,
     "yagi.maxCacheSize": 100,
-    "yagi.defaultTemplates": ["node", "vscode"],
-    "yagi.customApiEndpoint": "https://www.toptal.com/developers/gitignore/api",
+    "yagi.defaultTemplates": ["node", "vscode", "macos"],
     "yagi.customGitignorePath": ".gitignore"
 }
 ```
 
-## Recognized Problems
+## Supported Project Types
 
- In order to retrieve templates, an internet connection is necessary.
- It only functions in folders that are opened in Visual Studio Code as a
- workspace.
+YAGI automatically detects and suggests templates for:
 
-## Notes on Release
+- **JavaScript/TypeScript**: Node.js projects (detects `package.json`, `yarn.lock`, `pnpm-lock.yaml`)
+- **Python**: Python projects (detects `requirements.txt`, `pyproject.toml`)
+- **Java**: Maven and Gradle projects (detects `pom.xml`, `build.gradle`)
+- **Go**: Go modules (detects `go.mod`)
+- **Rust**: Cargo projects (detects `Cargo.toml`)
+- **Ruby**: Bundler projects (detects `Gemfile`)
+- **PHP**: Composer projects (detects `composer.json`)
+- **Unity**: Unity game engine projects (detects `Packages/manifest.json`, `Assets`)
+- **C/C++**: CMake projects (detects `CMakeLists.txt`)
+- **Operating Systems**: macOS, Windows, Linux
 
-### 1.0.0-First release: Use the Toptal API to create and manage .gitignore files
+## Known Issues
 
-### 1.0.1-Added the ability to append to an existing .gitignore file, update README
+- Requires an active internet connection to fetch templates
+- Only works within VS Code workspace folders
+- Template detection is based on common project files and may not cover all edge cases
 
- ---
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+---
 
 ## License
 

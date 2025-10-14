@@ -318,7 +318,7 @@
         },
         "javascript": {
                 "formatter": {
-                        "quoteStyle": "single",
+                        "quoteStyle": "double",
                         "jsxQuoteStyle": "double",
                         "quoteProperties": "asNeeded",
                         "trailingCommas": "es5",

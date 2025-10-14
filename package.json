@@ -12,6 +12,7 @@
         ],
         "activationEvents": [
                 "onCommand:yagi.generateGitignore",
+                "onCommand:yagi.previewGitignore",
                 "onStartupFinished"
         ],
         "capabilities": {
@@ -35,6 +36,10 @@
                         {
                                 "command": "yagi.generateGitignore",
                                 "title": "Generate .gitignore"
+                        },
+                        {
+                                "command": "yagi.previewGitignore",
+                                "title": "Preview .gitignore from templates"
                         }
                 ],
                 "configuration": {
@@ -87,13 +92,13 @@
                 "test": "vscode-test"
         },
         "devDependencies": {
-                "@biomejs/biome": "^2.2.5",
+                "@biomejs/biome": "^2.2.6",
                 "@types/mocha": "^10.0.10",
-                "@types/node": "^24.7.1",
+                "@types/node": "^24.7.2",
                 "@types/sinon": "^17.0.4",
                 "@types/vscode": "^1.105.0",
-                "@typescript-eslint/eslint-plugin": "^8.46.0",
-                "@typescript-eslint/parser": "^8.46.0",
+                "@typescript-eslint/eslint-plugin": "^8.46.1",
+                "@typescript-eslint/parser": "^8.46.1",
                 "@vscode/test-cli": "^0.0.12",
                 "@vscode/test-electron": "^2.5.2",
                 "eslint": "^9.37.0",
