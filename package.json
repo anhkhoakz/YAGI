@@ -2,7 +2,7 @@
         "name": "yagi",
         "displayName": "YAGI - Yet Another GitIgnore",
         "description": "Smart .gitignore generator with auto-detection, template preview, and intelligent suggestions",
-        "version": "0.1.2",
+        "version": "0.1.3",
         "publisher": "anhkhoakz",
         "author": {
                 "name": "anhkhoakz",
