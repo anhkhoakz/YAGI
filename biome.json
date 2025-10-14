@@ -179,17 +179,6 @@
                                 "useEnumInitializers": "error",
                                 "useExponentiationOperator": "error",
                                 "useExportType": "error",
-                                "useFilenamingConvention": {
-                                        "level": "error",
-                                        "options": {
-                                                "strictCase": false,
-                                                "requireAscii": true,
-                                                "filenameCases": [
-                                                        "kebab-case",
-                                                        "PascalCase"
-                                                ]
-                                        }
-                                },
                                 "useForOf": "error",
                                 "useFragmentSyntax": "error",
                                 "useImportType": "error",

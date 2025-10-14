@@ -1,18 +1,39 @@
 {
         "name": "yagi",
-        "displayName": "YAGI",
-        "description": "Yet! Another .gitignore",
-        "version": "0.1.0",
+        "displayName": "YAGI - Yet Another GitIgnore",
+        "description": "Smart .gitignore generator with auto-detection, template preview, and intelligent suggestions",
+        "version": "0.1.2",
+        "publisher": "anhkhoakz",
+        "author": {
+                "name": "anhkhoakz",
+                "url": "https://www.anhkhoakz.dev/"
+        },
+        "license": "GPL-3.0-only",
+        "icon": "assets/icon.png",
         "engines": {
                 "node": "^24.10.0",
                 "vscode": "^1.105.0"
         },
         "categories": [
-                "Other"
+                "Other",
+                "Snippets",
+                "Formatters"
+        ],
+        "keywords": [
+                "gitignore",
+                "git",
+                "ignore",
+                "templates",
+                "generator",
+                "auto-detect",
+                "preview",
+                "smart-suggestions",
+                "project-detection",
+                "cursor",
+                "vscode",
+                "vscodium"
         ],
         "activationEvents": [
-                "onCommand:yagi.generateGitignore",
-                "onCommand:yagi.previewGitignore",
                 "onStartupFinished"
         ],
         "capabilities": {
@@ -21,25 +42,26 @@
                         "supported": true
                 }
         },
-        "keywords": [
-                "gitignore",
-                "git",
-                "ignore",
-                "templates",
-                "cursor",
-                "vscode",
-                "vscodium"
-        ],
         "main": "./dist/extension.js",
         "contributes": {
                 "commands": [
                         {
                                 "command": "yagi.generateGitignore",
-                                "title": "Generate .gitignore"
+                                "title": "YAGI: Generate .gitignore",
+                                "category": "YAGI",
+                                "icon": "$(file-code)"
                         },
                         {
                                 "command": "yagi.previewGitignore",
-                                "title": "Preview .gitignore from templates"
+                                "title": "YAGI: Preview .gitignore Templates",
+                                "category": "YAGI",
+                                "icon": "$(preview)"
+                        },
+                        {
+                                "command": "yagi.clearCache",
+                                "title": "YAGI: Clear Cache",
+                                "category": "YAGI",
+                                "icon": "$(trash)"
                         }
                 ],
                 "configuration": {
@@ -48,17 +70,24 @@
                                 "yagi.templateListTtl": {
                                         "type": "number",
                                         "default": 86400000,
-                                        "description": "Time to live for template list cache in milliseconds (24 hours)"
+                                        "minimum": 0,
+                                        "description": "Cache duration for template list in milliseconds (default: 24 hours)",
+                                        "markdownDescription": "Time to live for template list cache in milliseconds. Set to `0` to disable caching."
                                 },
                                 "yagi.gitignoreCacheTtl": {
                                         "type": "number",
                                         "default": 3600000,
-                                        "description": "Time to live for gitignore content cache in milliseconds (1 hour)"
+                                        "minimum": 0,
+                                        "description": "Cache duration for gitignore content in milliseconds (default: 1 hour)",
+                                        "markdownDescription": "Time to live for gitignore content cache in milliseconds. Set to `0` to disable caching."
                                 },
                                 "yagi.maxCacheSize": {
                                         "type": "number",
                                         "default": 100,
-                                        "description": "Maximum number of cached gitignore templates"
+                                        "minimum": 1,
+                                        "maximum": 1000,
+                                        "description": "Maximum number of cached gitignore templates (default: 100)",
+                                        "markdownDescription": "Maximum number of cached gitignore templates. Older entries are automatically removed when limit is reached."
                                 },
                                 "yagi.defaultTemplates": {
                                         "type": "array",
@@ -66,15 +95,20 @@
                                                 "type": "string"
                                         },
                                         "default": [],
-                                        "description": "Default templates to pre-select when generating .gitignore"
+                                        "description": "Templates to always pre-select (e.g., [\"node\", \"vscode\", \"macos\"])",
+                                        "markdownDescription": "Array of template names to automatically pre-select when generating `.gitignore`. These will be selected in addition to auto-detected templates."
                                 },
                                 "yagi.customApiEndpoint": {
                                         "type": "string",
-                                        "description": "Custom API endpoint for gitignore templates (e.g. https://www.toptal.com/developers/gitignore/api)"
+                                        "default": null,
+                                        "description": "Custom API endpoint for gitignore templates",
+                                        "markdownDescription": "Custom API endpoint for gitignore templates. Leave empty to use default Toptal API: `https://www.toptal.com/developers/gitignore/api`"
                                 },
                                 "yagi.customGitignorePath": {
                                         "type": "string",
-                                        "description": "Custom path for .gitignore file (relative to workspace root)"
+                                        "default": ".gitignore",
+                                        "description": "Custom path for .gitignore file (relative to workspace root)",
+                                        "markdownDescription": "Custom path for `.gitignore` file relative to workspace root. Default: `.gitignore`"
                                 }
                         }
                 }
@@ -91,6 +125,30 @@
                 "format": "biome format src/ --write",
                 "test": "vscode-test"
         },
+        "repository": {
+                "type": "git",
+                "url": "https://github.com/anhkhoakz/YAGI.git"
+        },
+        "homepage": "https://github.com/anhkhoakz/YAGI#readme",
+        "bugs": {
+                "url": "https://github.com/anhkhoakz/YAGI/issues"
+        },
+        "galleryBanner": {
+                "color": "#1e1e1e",
+                "theme": "dark"
+        },
+        "badges": [
+                {
+                        "url": "https://img.shields.io/visual-studio-marketplace/d/anhkhoakz.yagi",
+                        "href": "https://marketplace.visualstudio.com/items?itemName=anhkhoakz.yagi",
+                        "description": "Visual Studio Marketplace Downloads"
+                },
+                {
+                        "url": "https://img.shields.io/open-vsx/dt/anhkhoakz/yagi",
+                        "href": "https://open-vsx.org/extension/anhkhoakz/yagi",
+                        "description": "Open VSX Downloads"
+                }
+        ],
         "devDependencies": {
                 "@biomejs/biome": "^2.2.6",
                 "@types/mocha": "^10.0.10",
@@ -108,24 +166,9 @@
                 "webpack": "^5.102.1",
                 "webpack-cli": "^6.0.1"
         },
-        "repository": {
-                "type": "git",
-                "url": "https://github.com/anhkhoakz/YAGI.git"
-        },
-        "license": "GPL-3.0-only",
-        "icon": "assets/icon.png",
-        "publisher": "anhkhoakz",
-        "homepage": "https://github.com/anhkhoakz/YAGI#readme",
-        "author": {
-                "name": "anhkhoakz",
-                "url": "https://www.anhkhoakz.dev/"
-        },
-        "engineStrict": false,
-        "private": false,
-        "bugs": {
-                "url": "https://github.com/anhkhoakz/YAGI/issues"
-        },
         "trustedDependencies": [
                 "@biomejs/biome"
-        ]
+        ],
+        "engineStrict": false,
+        "private": false
 }
