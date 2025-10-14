@@ -34,7 +34,10 @@
                 "vscodium"
         ],
         "activationEvents": [
-                "onStartupFinished"
+                "onStartupFinished",
+                "onCommand:yagi.generateGitignore",
+                "onCommand:yagi.previewGitignore",
+                "onCommand:yagi.clearCache"
         ],
         "capabilities": {
                 "virtualWorkspaces": true,
