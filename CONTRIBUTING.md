@@ -12,14 +12,14 @@
 
 Please make sure to follow the following guidelines before you contribute:
 
--   Write clear and concise commit messages.
--   Follow the existing coding style.
--   Test your changes thoroughly.
+- Write clear and concise commit messages.
+- Follow the existing coding style.
+- Test your changes thoroughly.
 
 ## Getting help
 
 If you have any questions or need help contributing, please feel free to open an issue on GitHub.
 
-## Thank you!
+## Thank you
 
 Thank you for your contributions to LinkSnipper!

@@ -13,21 +13,23 @@ import { createStatusBarItem } from "./ui/statusBar";
  * @param context VS Code extension context.
  */
 export const activate = (context: vscode.ExtensionContext): void => {
-    const config = loadConfiguration();
-    const statusBarItem = createStatusBarItem();
-    statusBarItem.show();
+        const config = loadConfiguration();
+        const statusBarItem = createStatusBarItem();
+        statusBarItem.show();
 
-    const commands = [
-        vscode.commands.registerCommand("yagi.generateGitignore", () =>
-            generateGitignore(context, config)
-        ),
-        vscode.commands.registerCommand("yagi.previewGitignore", () =>
-            previewGitignore(context, config)
-        ),
-        vscode.commands.registerCommand("yagi.clearCache", () => clearCache(context)),
-    ];
+        const commands = [
+                vscode.commands.registerCommand("yagi.generateGitignore", () =>
+                        generateGitignore(context, config)
+                ),
+                vscode.commands.registerCommand("yagi.previewGitignore", () =>
+                        previewGitignore(context, config)
+                ),
+                vscode.commands.registerCommand("yagi.clearCache", () =>
+                        clearCache(context)
+                ),
+        ];
 
-    context.subscriptions.push(statusBarItem, ...commands);
+        context.subscriptions.push(statusBarItem, ...commands);
 };
 
 /**
@@ -35,5 +37,5 @@ export const activate = (context: vscode.ExtensionContext): void => {
  * Extension cleanup is handled automatically by VS Code.
  */
 export const deactivate = (): void => {
-    // Extension cleanup is handled automatically by VS Code
+        // Extension cleanup is handled automatically by VS Code
 };

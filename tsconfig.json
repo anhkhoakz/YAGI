@@ -1,7 +1,6 @@
 {
         "$schema": "https://json.schemastore.org/tsconfig",
         "compilerOptions": {
-                /* Language and Environment */
                 "target": "ES2022",
                 "lib": [
                         "ES2022"
@@ -12,7 +11,6 @@
                 "experimentalDecorators": false,
                 "emitDecoratorMetadata": false,
                 "useDefineForClassFields": true,
-                /* Modules */
                 "rootDir": "src",
                 "baseUrl": ".",
                 "paths": {
@@ -23,7 +21,6 @@
                 "resolveJsonModule": true,
                 "allowArbitraryExtensions": false,
                 "noResolve": false,
-                /* Emit */
                 "outDir": "dist",
                 "declaration": false,
                 "declarationMap": false,
@@ -38,14 +35,12 @@
                 "noEmitHelpers": false,
                 "importHelpers": false,
                 "downlevelIteration": false,
-                /* Interop Constraints */
                 "isolatedModules": true,
                 "allowSyntheticDefaultImports": true,
                 "esModuleInterop": true,
                 "preserveSymlinks": false,
                 "forceConsistentCasingInFileNames": true,
                 "verbatimModuleSyntax": false,
-                /* Type Checking - Strict Mode */
                 "strict": true,
                 "noImplicitAny": true,
                 "strictNullChecks": true,

@@ -7,4 +7,9 @@ export { API_ENDPOINTS, DEFAULT_CONFIG, STORAGE_KEYS } from "./constants";
 // Main entry point - re-export from extension
 export { activate, deactivate } from "./extension";
 // Export types for external use
-export type { CacheEntry, CacheObject, GitignoreTemplate, YagiConfig } from "./types";
+export type {
+        CacheEntry,
+        CacheObject,
+        GitignoreTemplate,
+        YagiConfig,
+} from "./types";

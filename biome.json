@@ -1,5 +1,5 @@
 {
-        "$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
+        "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
         "vcs": {
                 "enabled": true,
                 "clientKind": "git",
@@ -26,9 +26,9 @@
                 "enabled": true,
                 "formatWithErrors": false,
                 "indentStyle": "space",
-                "indentWidth": 4,
+                "indentWidth": 8,
                 "lineEnding": "lf",
-                "lineWidth": 100,
+                "lineWidth": 80,
                 "attributePosition": "auto",
                 "bracketSpacing": true
         },
@@ -44,6 +44,7 @@
                 "rules": {
                         "recommended": true,
                         "a11y": {
+                                "recommended": true,
                                 "noAccessKey": "error",
                                 "noAriaHiddenOnFocusable": "error",
                                 "noAriaUnsupportedElements": "error",
@@ -77,6 +78,7 @@
                                 "useValidAutocomplete": "error"
                         },
                         "complexity": {
+                                "recommended": true,
                                 "noBannedTypes": "error",
                                 "noExtraBooleanCast": "error",
                                 "noForEach": "warn",
@@ -110,6 +112,7 @@
                                 "useDateNow": "error"
                         },
                         "correctness": {
+                                "recommended": true,
                                 "noChildrenProp": "error",
                                 "noConstAssign": "error",
                                 "noConstantCondition": "error",
@@ -148,12 +151,14 @@
                                 "noUnusedFunctionParameters": "warn"
                         },
                         "security": {
+                                "recommended": true,
                                 "noDangerouslySetInnerHtml": "warn",
                                 "noDangerouslySetInnerHtmlWithChildren": "error",
                                 "noGlobalEval": "error",
                                 "noBlankTarget": "error"
                         },
                         "style": {
+                                "recommended": true,
                                 "noDefaultExport": "off",
                                 "noImplicitBoolean": "off",
                                 "noInferrableTypes": "error",
@@ -247,6 +252,7 @@
                                 "useThrowOnlyError": "error"
                         },
                         "suspicious": {
+                                "recommended": true,
                                 "noApproximativeNumericConstant": "error",
                                 "noArrayIndexKey": "warn",
                                 "noAssignInExpressions": "error",
@@ -264,7 +270,6 @@
                                 "noDoubleEquals": "error",
                                 "noDuplicateCase": "error",
                                 "noDuplicateClassMembers": "error",
-                                "noDuplicateJsxProps": "error",
                                 "noDuplicateObjectKeys": "error",
                                 "noDuplicateParameters": "error",
                                 "noEmptyBlockStatements": "error",
@@ -299,8 +304,11 @@
                                 "useErrorMessage": "error",
                                 "useNumberToFixedDigitsArgument": "error"
                         },
-                        "nursery": {},
+                        "nursery": {
+                                "recommended": true
+                        },
                         "performance": {
+                                "recommended": true,
                                 "useTopLevelRegex": "error"
                         }
                 }
@@ -308,25 +316,21 @@
         "javascript": {
                 "formatter": {
                         "quoteStyle": "double",
-                        "jsxQuoteStyle": "double",
                         "quoteProperties": "asNeeded",
                         "trailingCommas": "es5",
                         "semicolons": "always",
                         "arrowParentheses": "always",
                         "bracketSameLine": false,
-                        "lineWidth": 100,
-                        "indentWidth": 4
+                        "lineWidth": 80,
+                        "indentWidth": 8
                 },
-                "globals": [
-                        "React",
-                        "JSX"
-                ]
+                "globals": []
         },
         "json": {
                 "formatter": {
                         "enabled": true,
-                        "indentWidth": 4,
-                        "lineWidth": 100
+                        "indentWidth": 8,
+                        "lineWidth": 80
                 },
                 "parser": {
                         "allowComments": true,
@@ -350,10 +354,7 @@
                         }
                 },
                 {
-                        "includes": [
-                                "**/*.config.js",
-                                "**/*.config.ts"
-                        ],
+                        "includes": ["**/*.config.js", "**/*.config.ts"],
                         "linter": {
                                 "rules": {
                                         "style": {

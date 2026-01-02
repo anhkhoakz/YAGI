@@ -14,33 +14,42 @@ import { detectProjectType } from "../utils/detection";
  * @return Promise resolving to selected templates or undefined if cancelled.
  */
 export const showTemplatePicker = async (
-    templates: string[],
-    defaultTemplates: readonly string[]
+        templates: string[],
+        defaultTemplates: readonly string[]
 ): Promise<GitignoreTemplate[] | undefined> => {
-    const defaultSet = new Set(defaultTemplates.map((t) => t.toLowerCase()));
+        const defaultSet = new Set(
+                defaultTemplates.map((t) => t.toLowerCase())
+        );
 
-    // Prepare suggestions, but don't block UI if detection fails
-    const suggestions = await detectProjectType().catch(() => [] as string[]);
-    const suggestedSet = new Set(suggestions.map((s) => s.toLowerCase()));
+        // Prepare suggestions, but don't block UI if detection fails
+        const suggestions = await detectProjectType().catch(
+                () => [] as string[]
+        );
+        const suggestedSet = new Set(suggestions.map((s) => s.toLowerCase()));
 
-    const items: GitignoreTemplate[] = templates.map((template) => {
-        const key = template.toLowerCase();
-        const isDefault = defaultSet.has(key);
-        const isSuggested = suggestedSet.has(key);
+        const items: GitignoreTemplate[] = templates.map((template) => {
+                const key = template.toLowerCase();
+                const isDefault = defaultSet.has(key);
+                const isSuggested = suggestedSet.has(key);
 
-        return {
-            label: template,
-            description: isDefault ? "Default template" : isSuggested ? "Suggested" : "",
-            ...(isDefault || isSuggested ? { picked: true } : {}),
-        };
-    });
+                return {
+                        label: template,
+                        description: isDefault
+                                ? "Default template"
+                                : isSuggested
+                                  ? "Suggested"
+                                  : "",
+                        ...(isDefault || isSuggested ? { picked: true } : {}),
+                };
+        });
 
-    return vscode.window.showQuickPick(items, {
-        canPickMany: true,
-        placeHolder: "Select gitignore templates (e.g., Node, macOS, VisualStudioCode)",
-        ignoreFocusOut: true,
-        matchOnDescription: true,
-    });
+        return vscode.window.showQuickPick(items, {
+                canPickMany: true,
+                placeHolder:
+                        "Select gitignore templates (e.g., Node, macOS, VisualStudioCode)",
+                ignoreFocusOut: true,
+                matchOnDescription: true,
+        });
 };
 
 /**
@@ -48,9 +57,9 @@ export const showTemplatePicker = async (
  * @param content The gitignore content to preview.
  */
 export const showTemplatePreview = async (content: string): Promise<void> => {
-    const doc = await vscode.workspace.openTextDocument({
-        content,
-        language: "gitignore",
-    });
-    await vscode.window.showTextDocument(doc, { preview: true });
+        const doc = await vscode.workspace.openTextDocument({
+                content,
+                language: "gitignore",
+        });
+        await vscode.window.showTextDocument(doc, { preview: true });
 };

@@ -16,12 +16,16 @@ import type { CacheObject } from "../types";
  * @return True if cache is valid, false otherwise.
  */
 export function isCacheValid<T>(
-    cached: T | undefined,
-    timestamp: number | undefined,
-    now: number,
-    ttl: number
+        cached: T | undefined,
+        timestamp: number | undefined,
+        now: number,
+        ttl: number
 ): cached is T {
-    return cached !== undefined && timestamp !== undefined && now - timestamp < ttl;
+        return (
+                cached !== undefined &&
+                timestamp !== undefined &&
+                now - timestamp < ttl
+        );
 }
 
 /**
@@ -31,14 +35,20 @@ export function isCacheValid<T>(
  * @param timestamp Current timestamp.
  */
 export async function updateTemplateCache(
-    context: vscode.ExtensionContext,
-    templates: string[],
-    timestamp: number
+        context: vscode.ExtensionContext,
+        templates: string[],
+        timestamp: number
 ): Promise<void> {
-    await Promise.all([
-        context.globalState.update(STORAGE_KEYS.templateList, templates),
-        context.globalState.update(STORAGE_KEYS.templateListTimestamp, timestamp),
-    ]);
+        await Promise.all([
+                context.globalState.update(
+                        STORAGE_KEYS.templateList,
+                        templates
+                ),
+                context.globalState.update(
+                        STORAGE_KEYS.templateListTimestamp,
+                        timestamp
+                ),
+        ]);
 }
 
 /**
@@ -51,20 +61,23 @@ export async function updateTemplateCache(
  * @param maxCacheSize Maximum number of cache entries to keep.
  */
 export async function updateGitignoreCache(
-    context: vscode.ExtensionContext,
-    cacheObj: CacheObject,
-    cacheKey: string,
-    content: string,
-    timestamp: number,
-    maxCacheSize: number
+        context: vscode.ExtensionContext,
+        cacheObj: CacheObject,
+        cacheKey: string,
+        content: string,
+        timestamp: number,
+        maxCacheSize: number
 ): Promise<void> {
-    const updatedCache: CacheObject = {
-        ...cacheObj,
-        [cacheKey]: { content, timestamp },
-    };
+        const updatedCache: CacheObject = {
+                ...cacheObj,
+                [cacheKey]: { content, timestamp },
+        };
 
-    const cleanedCache = cleanupCache(updatedCache, maxCacheSize);
-    await context.globalState.update(STORAGE_KEYS.gitignoreCache, cleanedCache);
+        const cleanedCache = cleanupCache(updatedCache, maxCacheSize);
+        await context.globalState.update(
+                STORAGE_KEYS.gitignoreCache,
+                cleanedCache
+        );
 }
 
 /**
@@ -73,27 +86,43 @@ export async function updateGitignoreCache(
  * @param maxCacheSize Maximum number of entries to keep.
  * @return Cleaned cache object.
  */
-export function cleanupCache(cacheObj: CacheObject, maxCacheSize: number): CacheObject {
-    const entries = Object.entries(cacheObj);
+export function cleanupCache(
+        cacheObj: CacheObject,
+        maxCacheSize: number
+): CacheObject {
+        const entries = Object.entries(cacheObj);
 
-    if (entries.length <= maxCacheSize) {
-        return cacheObj;
-    }
+        if (entries.length <= maxCacheSize) {
+                return cacheObj;
+        }
 
-    // Keep most recently used entries
-    return Object.fromEntries(
-        entries.sort(([, a], [, b]) => b.timestamp - a.timestamp).slice(0, maxCacheSize)
-    );
+        // Keep most recently used entries
+        return Object.fromEntries(
+                entries
+                        .sort(([, a], [, b]) => b.timestamp - a.timestamp)
+                        .slice(0, maxCacheSize)
+        );
 }
 
 /**
  * Clears all cached data from VS Code global state.
  * @param context VS Code extension context.
  */
-export async function clearAllCache(context: vscode.ExtensionContext): Promise<void> {
-    await Promise.all([
-        context.globalState.update(STORAGE_KEYS.templateList, undefined),
-        context.globalState.update(STORAGE_KEYS.templateListTimestamp, undefined),
-        context.globalState.update(STORAGE_KEYS.gitignoreCache, undefined),
-    ]);
+export async function clearAllCache(
+        context: vscode.ExtensionContext
+): Promise<void> {
+        await Promise.all([
+                context.globalState.update(
+                        STORAGE_KEYS.templateList,
+                        undefined
+                ),
+                context.globalState.update(
+                        STORAGE_KEYS.templateListTimestamp,
+                        undefined
+                ),
+                context.globalState.update(
+                        STORAGE_KEYS.gitignoreCache,
+                        undefined
+                ),
+        ]);
 }

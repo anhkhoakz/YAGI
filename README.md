@@ -12,33 +12,41 @@ A powerful Visual Studio Code extension that simplifies creating and managing `.
 ## Features
 
 ### 🚀 Smart Template Suggestions
+
 YAGI automatically detects your project type by analyzing common files (e.g., `package.json`, `pom.xml`, `requirements.txt`, `go.mod`) and suggests relevant templates. It also pre-selects OS-specific templates based on your platform.
 
 ### 👁️ Template Preview
+
 Preview the generated `.gitignore` content before applying it to your project, ensuring you know exactly what will be ignored.
 
 ### ⚡ Quick Access
+
 A convenient status bar item provides one-click access to generate `.gitignore` files without opening the command palette.
 
 ### 🔄 Flexible File Management
+
 - Create a new `.gitignore` file from scratch
 - Override an existing `.gitignore` file
 - Append templates to an existing `.gitignore` file
 
 ### 📦 Always Up-to-Date
+
 Fetches templates directly from the Toptal API, ensuring you always get the most recent and comprehensive ignore patterns.
 
 ### 💾 Intelligent Caching
+
 Built-in caching system reduces API calls and improves performance, with configurable TTL settings.
 
 ## Usage
 
 ### Quick Start
+
 1. Click the **GitIgnore** button in the status bar (bottom-right corner)
 2. Select templates from the list (smart suggestions will be pre-selected)
 3. Choose to create, override, or append to your `.gitignore` file
 
 ### Command Palette
+
 1. Open the command palette (`Ctrl+Shift+P` on Windows/Linux, `Cmd+Shift+P` on macOS)
 2. Run one of these commands:
    - **Generate .gitignore** - Create or update your `.gitignore` file
@@ -46,7 +54,9 @@ Built-in caching system reduces API calls and improves performance, with configu
    - **YAGI: Clear Cache** - Clear cached templates and content
 
 ### Smart Suggestions
+
 YAGI automatically suggests templates based on:
+
 - **Project files**: Detects Node, Python, Java, Go, Rust, Ruby, PHP, Unity, C/C++, and more
 - **Operating system**: Automatically includes macOS, Windows, or Linux templates
 - **User preferences**: Pre-selects templates defined in your settings
@@ -62,7 +72,7 @@ YAGI automatically suggests templates based on:
 YAGI can be customized through VS Code settings:
 
 | Setting | Type | Default | Description |
-|---------|------|---------|-------------|
+| ------- | ---- | ------- | ----------- |
 | `yagi.templateListTtl` | number | `86400000` | Cache duration for template list (24 hours in ms) |
 | `yagi.gitignoreCacheTtl` | number | `3600000` | Cache duration for gitignore content (1 hour in ms) |
 | `yagi.maxCacheSize` | number | `100` | Maximum number of cached gitignore templates |

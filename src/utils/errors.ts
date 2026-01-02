@@ -8,5 +8,5 @@
  * @return The error message string.
  */
 export const getErrorMessage = (error: unknown): string => {
-    return error instanceof Error ? error.message : String(error);
+        return error instanceof Error ? error.message : String(error);
 };
