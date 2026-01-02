@@ -24,6 +24,7 @@ export const getWorkspaceFolder = (): vscode.WorkspaceFolder => {
                         "No workspace folder is open. Please open a folder or workspace first."
                 );
         }
+
         return firstFolder;
 };
 
@@ -67,15 +68,12 @@ export const writeGitignoreFile = async (
         );
         const exists = await checkFileExists(gitignoreUri);
 
-        if (exists) {
-                await handleExistingGitignore(
-                        gitignoreUri,
-                        content,
-                        gitignorePath
-                );
-        } else {
+        if (!exists) {
                 await createNewGitignore(gitignoreUri, content, gitignorePath);
+                return;
         }
+
+        await handleExistingGitignore(gitignoreUri, content, gitignorePath);
 };
 
 /**
@@ -84,11 +82,11 @@ export const writeGitignoreFile = async (
  * @param content Content to write.
  * @param gitignorePath Path for user messages.
  */
-async function handleExistingGitignore(
+const handleExistingGitignore = async (
         uri: vscode.Uri,
         content: string,
         gitignorePath: string
-): Promise<void> {
+): Promise<void> => {
         const action = await vscode.window.showQuickPick(
                 ["Override", "Append", "Cancel"],
                 {
@@ -104,10 +102,11 @@ async function handleExistingGitignore(
 
         if (action === "Append") {
                 await appendToGitignore(uri, content, gitignorePath);
-        } else {
-                await createNewGitignore(uri, content, gitignorePath);
+                return;
         }
-}
+
+        await createNewGitignore(uri, content, gitignorePath);
+};
 
 /**
  * Appends content to existing gitignore file.

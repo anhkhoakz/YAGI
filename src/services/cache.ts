@@ -73,6 +73,17 @@ export async function updateGitignoreCache(
                 [cacheKey]: { content, timestamp },
         };
 
+        const entries = Object.entries(updatedCache);
+        const needsCleanup = entries.length > maxCacheSize;
+
+        if (!needsCleanup) {
+                await context.globalState.update(
+                        STORAGE_KEYS.gitignoreCache,
+                        updatedCache
+                );
+                return;
+        }
+
         const cleanedCache = cleanupCache(updatedCache, maxCacheSize);
         await context.globalState.update(
                 STORAGE_KEYS.gitignoreCache,
@@ -96,12 +107,12 @@ export function cleanupCache(
                 return cacheObj;
         }
 
-        // Keep most recently used entries
-        return Object.fromEntries(
-                entries
-                        .sort(([, a], [, b]) => b.timestamp - a.timestamp)
-                        .slice(0, maxCacheSize)
+        const sortedEntries = entries.sort(
+                ([, a], [, b]) => b.timestamp - a.timestamp
         );
+        const keptEntries = sortedEntries.slice(0, maxCacheSize);
+
+        return Object.fromEntries(keptEntries);
 }
 
 /**

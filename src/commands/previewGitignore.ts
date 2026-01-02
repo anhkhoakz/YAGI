@@ -4,16 +4,11 @@
 
 import * as vscode from "vscode";
 
-import { STORAGE_KEYS } from "../constants";
-import { fetchGitignoreContent, fetchTemplates } from "../services/api";
-import {
-        isCacheValid,
-        updateGitignoreCache,
-        updateTemplateCache,
-} from "../services/cache";
+import { getGitignoreContent, getTemplates } from "../services/templates";
 import type { YagiConfig } from "../types";
 import { showTemplatePicker, showTemplatePreview } from "../ui/templatePicker";
 import { getErrorMessage } from "../utils/errors";
+import { logError, logInfo } from "../utils/logger";
 
 /**
  * Previews gitignore content based on user-selected templates.
@@ -25,126 +20,82 @@ export const previewGitignore = async (
         config: YagiConfig
 ): Promise<void> => {
         try {
-                const templates = await getTemplates(context, config);
+                logInfo("Starting gitignore preview");
 
-                if (templates.length === 0) {
-                        vscode.window.showWarningMessage(
-                                "No templates are available from the API."
-                        );
-                        return;
-                }
+                await vscode.window.withProgress(
+                        {
+                                location: vscode.ProgressLocation.Notification,
+                                title: "YAGI: Previewing .gitignore",
+                                cancellable: false,
+                        },
+                        async (progress) => {
+                                progress.report({
+                                        increment: 0,
+                                        message: "Fetching templates...",
+                                });
 
-                const selected = await showTemplatePicker(
-                        templates,
-                        config.defaultTemplates
+                                const templates = await getTemplates(
+                                        context,
+                                        config
+                                );
+
+                                if (templates.length === 0) {
+                                        vscode.window.showWarningMessage(
+                                                "No templates are available from the API."
+                                        );
+                                        return;
+                                }
+
+                                progress.report({
+                                        increment: 30,
+                                        message: "Selecting templates...",
+                                });
+
+                                const selected = await showTemplatePicker(
+                                        templates,
+                                        config.defaultTemplates
+                                );
+
+                                if (!selected || selected.length === 0) {
+                                        vscode.window.showInformationMessage(
+                                                "No templates selected."
+                                        );
+                                        return;
+                                }
+
+                                logInfo(
+                                        `Previewing gitignore for templates: ${selected.map((t) => t.label).join(", ")}`
+                                );
+
+                                progress.report({
+                                        increment: 50,
+                                        message: "Fetching gitignore content...",
+                                });
+
+                                const content = await getGitignoreContent(
+                                        context,
+                                        config,
+                                        selected.map((t) => t.label)
+                                );
+
+                                progress.report({
+                                        increment: 90,
+                                        message: "Opening preview...",
+                                });
+
+                                await showTemplatePreview(content);
+                                progress.report({
+                                        increment: 100,
+                                        message: "Complete!",
+                                });
+                                logInfo("Gitignore preview displayed");
+                        }
                 );
-
-                if (selected?.length === 0) {
-                        vscode.window.showInformationMessage(
-                                "No templates selected."
-                        );
-                        return;
-                }
-
-                if (!selected || selected.length === 0) {
-                        vscode.window.showInformationMessage(
-                                "No templates selected."
-                        );
-                        return;
-                }
-
-                const content = await getGitignoreContent(
-                        context,
-                        config,
-                        selected.map((t) => t.label)
-                );
-
-                await showTemplatePreview(content);
         } catch (error) {
+                logError("Failed to preview gitignore", error);
                 const errorMessage = getErrorMessage(error);
                 vscode.window.showErrorMessage(
                         `Failed to preview .gitignore: ${errorMessage}`
                 );
         }
 };
-
-/**
- * Gets templates from cache or fetches from API.
- * @param context VS Code extension context.
- * @param config Extension configuration.
- * @return Promise resolving to array of template names.
- */
-async function getTemplates(
-        context: vscode.ExtensionContext,
-        config: YagiConfig
-): Promise<string[]> {
-        const now = Date.now();
-        const cachedList = context.globalState.get<string[]>(
-                STORAGE_KEYS.templateList
-        );
-        const cachedTimestamp = context.globalState.get<number>(
-                STORAGE_KEYS.templateListTimestamp
-        );
-
-        if (
-                isCacheValid(
-                        cachedList,
-                        cachedTimestamp,
-                        now,
-                        config.templateListTtl
-                )
-        ) {
-                return cachedList;
-        }
-
-        const templates = await fetchTemplates(config.customApiEndpoint);
-        await updateTemplateCache(context, templates, now);
-        return templates;
-}
-
-/**
- * Gets gitignore content from cache or fetches from API.
- * @param context VS Code extension context.
- * @param config Extension configuration.
- * @param templates Template names to fetch content for.
- * @return Promise resolving to gitignore content string.
- */
-async function getGitignoreContent(
-        context: vscode.ExtensionContext,
-        config: YagiConfig,
-        templates: string[]
-): Promise<string> {
-        const now = Date.now();
-        const cacheKey = templates.sort().join(",");
-        const cacheObj =
-                context.globalState.get<
-                        Record<string, { content: string; timestamp: number }>
-                >(STORAGE_KEYS.gitignoreCache) ?? {};
-        const cachedEntry = cacheObj[cacheKey];
-
-        if (
-                cachedEntry &&
-                isCacheValid(
-                        cachedEntry.content,
-                        cachedEntry.timestamp,
-                        now,
-                        config.gitignoreCacheTtl
-                )
-        ) {
-                return cachedEntry.content;
-        }
-
-        const content = await fetchGitignoreContent(
-                templates,
-                config.customApiEndpoint
-        );
-        await updateGitignoreCache(
-                context,
-                cacheObj,
-                cacheKey,
-                content,
-                now,
-                config.maxCacheSize
-        );
-        return content;
-}

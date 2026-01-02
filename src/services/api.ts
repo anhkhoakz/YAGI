@@ -3,35 +3,66 @@
  */
 
 import { API_ENDPOINTS, TEMPLATE_SPLIT_REGEX } from "../constants";
-import { getErrorMessage } from "../utils/errors";
+import { ApiError, NetworkError } from "../utils/errorTypes";
+import { logDebug, logError } from "../utils/logger";
+import { fetchWithRetry } from "../utils/network";
+
+/**
+ * Parses template list from API response text.
+ * @param text Response text from API.
+ * @param endpoint Endpoint URL for error messages.
+ * @return Array of template names.
+ * @throws ApiError if no templates found.
+ */
+export const parseTemplates = (text: string, endpoint: string): string[] => {
+        const templates = text
+                .split(TEMPLATE_SPLIT_REGEX)
+                .map((template) => template.trim())
+                .filter((template) => template.length > 0);
+
+        if (templates.length === 0) {
+                throw new ApiError(
+                        `No templates found in response from ${endpoint}`,
+                        undefined
+                );
+        }
+
+        return templates;
+};
 
 /**
  * Fetches available gitignore templates from API.
  * @param customApiEndpoint Optional custom API endpoint.
  * @return Promise resolving to array of template names.
+ * @throws NetworkError for network issues or timeouts.
+ * @throws ApiError for HTTP errors.
  */
 export const fetchTemplates = async (
         customApiEndpoint: string | null
 ): Promise<string[]> => {
         const endpoint = customApiEndpoint ?? API_ENDPOINTS.templateList;
+        logDebug(`Fetching templates from: ${endpoint}`);
 
         try {
-                const response = await fetch(endpoint);
+                const response = await fetchWithRetry(endpoint);
+                const text = await response.text();
+                const templates = parseTemplates(text, endpoint);
+                logDebug(`Fetched ${templates.length} templates`);
+                return templates;
+        } catch (error) {
+                logError(`Failed to fetch templates from ${endpoint}`, error);
 
-                if (!response.ok) {
-                        throw new Error(
-                                `HTTP ${response.status}: ${response.statusText}`
-                        );
+                if (
+                        error instanceof ApiError ||
+                        error instanceof NetworkError
+                ) {
+                        throw error;
                 }
 
-                const text = await response.text();
-                return text
-                        .split(TEMPLATE_SPLIT_REGEX)
-                        .map((template) => template.trim())
-                        .filter((template) => template.length > 0);
-        } catch (error) {
-                throw new Error(
-                        `Failed to fetch templates from ${endpoint}: ${getErrorMessage(error)}`
+                throw new ApiError(
+                        `Failed to fetch templates from ${endpoint}`,
+                        undefined,
+                        error
                 );
         }
 };
@@ -41,27 +72,47 @@ export const fetchTemplates = async (
  * @param templates Array of template names to fetch.
  * @param customApiEndpoint Optional custom API endpoint.
  * @return Promise resolving to gitignore content string.
+ * @throws NetworkError for network issues or timeouts.
+ * @throws ApiError for HTTP errors.
  */
 export const fetchGitignoreContent = async (
         templates: string[],
         customApiEndpoint: string | null
 ): Promise<string> => {
+        if (templates.length === 0) {
+                throw new ApiError("No templates provided", undefined);
+        }
+
         const baseEndpoint = customApiEndpoint ?? API_ENDPOINTS.gitignore;
         const endpoint = `${baseEndpoint}/${templates.join(",")}`;
+        logDebug(
+                `Fetching gitignore content for templates: ${templates.join(", ")}`
+        );
 
         try {
-                const response = await fetch(endpoint);
+                const response = await fetchWithRetry(endpoint);
+                const content = await response.text();
+                logDebug(
+                        `Fetched gitignore content (${content.length} characters)`
+                );
+                return content;
+        } catch (error) {
+                logError(
+                        `Failed to generate .gitignore from ${endpoint}`,
+                        error
+                );
 
-                if (!response.ok) {
-                        throw new Error(
-                                `HTTP ${response.status}: ${response.statusText}`
-                        );
+                if (
+                        error instanceof ApiError ||
+                        error instanceof NetworkError
+                ) {
+                        throw error;
                 }
 
-                return await response.text();
-        } catch (error) {
-                throw new Error(
-                        `Failed to generate .gitignore from ${endpoint}: ${getErrorMessage(error)}`
+                throw new ApiError(
+                        `Failed to generate .gitignore from ${endpoint}`,
+                        undefined,
+                        error
                 );
         }
 };
